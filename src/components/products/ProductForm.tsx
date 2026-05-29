@@ -21,7 +21,10 @@ import { Separator } from '@/components/ui/separator'
 import { VariantPricingTable } from './VariantPricingTable'
 import { MarkupTableDisplay } from './MarkupTableDisplay'
 import { ImageUploader, type UploadedImage } from './ImageUploader'
+import { ProductPreview } from './ProductPreview'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
+import { calcPrice } from '@/lib/pricing'
 import { Trash2, Plus } from 'lucide-react'
 import type { Database } from '@/types/database'
 
@@ -37,6 +40,7 @@ const highlightSchema = z.object({
 const variantSchema = z.object({
   bead_size_mm: z.string(),
   cost_price_mop: z.string(),
+  reiky_cost_mop: z.string(),
 })
 
 const schema = z.object({
@@ -48,6 +52,8 @@ const schema = z.object({
   description: z.string(),
   status: z.enum(['draft', 'published', 'secret']),
   markup_pct: z.number().min(0),
+  review_count: z.number().min(0),
+  rating: z.number().min(0).max(5),
   properties: z.object({
     chakra: z.string(),
     element: z.string(),
@@ -80,10 +86,10 @@ function slugify(str: string) {
 }
 
 const DEFAULT_VARIANTS = [
-  { bead_size_mm: '6', cost_price_mop: '' },
-  { bead_size_mm: '8', cost_price_mop: '' },
-  { bead_size_mm: '10', cost_price_mop: '' },
-  { bead_size_mm: '12', cost_price_mop: '' },
+  { bead_size_mm: '6',  cost_price_mop: '', reiky_cost_mop: '' },
+  { bead_size_mm: '8',  cost_price_mop: '', reiky_cost_mop: '' },
+  { bead_size_mm: '10', cost_price_mop: '', reiky_cost_mop: '' },
+  { bead_size_mm: '12', cost_price_mop: '', reiky_cost_mop: '' },
 ]
 
 export function ProductForm({ crystal, variants = [], initialImages = [] }: Props) {
@@ -104,6 +110,8 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
       description: crystal?.description ?? '',
       status: crystal?.status ?? 'draft',
       markup_pct: crystal?.markup_pct ?? 60,
+      review_count: crystal?.review_count ?? 0,
+      rating: crystal?.rating ?? 5.0,
       properties: {
         chakra: '',
         element: '',
@@ -129,6 +137,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           ? variants.map((v) => ({
               bead_size_mm: v.bead_size_mm.toString(),
               cost_price_mop: v.cost_price_mop.toString(),
+              reiky_cost_mop: v.reiky_cost_mop?.toString() ?? '',
             }))
           : DEFAULT_VARIANTS,
     },
@@ -175,6 +184,16 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           ? parseFloat(firstCost.cost_price_mop)
           : null
 
+        // Compute display_price_sgd from first variant that has a Reiky cost
+        const firstReikyVariant = values.variants.find((v) => v.reiky_cost_mop && v.cost_price_mop)
+        const display_price_sgd = firstReikyVariant
+          ? calcPrice(
+              parseFloat(firstReikyVariant.reiky_cost_mop),
+              values.markup_pct,
+              { mopSgdRate: rate, ccFeePct: 3.4, gstPct: 9 }
+            ).finalSgd
+          : null
+
         const crystalData = {
           name: values.name,
           slug: values.slug,
@@ -188,6 +207,9 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           markup_pct: values.markup_pct,
           status: values.status,
           secret_token: crystal?.secret_token ?? null,
+          review_count: values.review_count,
+          rating: values.rating,
+          display_price_sgd,
         }
 
         let crystalId = crystal?.id
@@ -224,6 +246,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
             crystal_id: crystalId!,
             bead_size_mm: parseFloat(v.bead_size_mm),
             cost_price_mop: parseFloat(v.cost_price_mop),
+            reiky_cost_mop: v.reiky_cost_mop ? parseFloat(v.reiky_cost_mop) : null,
             sort_order: i,
             in_stock: true,
           }))
@@ -257,12 +280,24 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
   return (
     <FormProvider {...form}>
-      <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSave)}>
         {error && (
-          <div className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md">
+          <div className="text-sm text-destructive bg-destructive/10 px-4 py-3 rounded-md mb-4">
             {error}
           </div>
         )}
+
+        <Tabs defaultValue="edit">
+          <TabsList className="mb-4">
+            <TabsTrigger value="edit">Edit</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="preview">
+            <ProductPreview rate={rate} markupPct={Number(watchedMarkup)} />
+          </TabsContent>
+
+          <TabsContent value="edit" className="space-y-6">
 
         {/* A. Basic Info */}
         <Card>
@@ -342,6 +377,29 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
                     <SelectItem value="secret">Secret</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Star Rating (1–5)</Label>
+                <Input
+                  {...form.register('rating', { valueAsNumber: true })}
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="5"
+                  placeholder="5.0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Review Count</Label>
+                <Input
+                  {...form.register('review_count', { valueAsNumber: true })}
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                />
               </div>
             </div>
 
@@ -481,20 +539,23 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           </CardContent>
         </Card>
 
-        <Separator />
+          <Separator />
 
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push('/products')}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Saving…' : crystal ? 'Save Changes' : 'Create Product'}
-          </Button>
-        </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push('/products')}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving…' : crystal ? 'Save Changes' : 'Create Product'}
+            </Button>
+          </div>
+
+          </TabsContent>
+        </Tabs>
       </form>
     </FormProvider>
   )

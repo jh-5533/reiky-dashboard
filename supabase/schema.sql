@@ -259,3 +259,36 @@ create trigger orders_updated_at before update on public.orders for each row exe
 -- ── Storage bucket ────────────────────────────────────────────
 -- Run this AFTER creating the bucket named 'product-images' in Supabase Storage UI
 -- insert into storage.buckets (id, name, public) values ('product-images', 'product-images', true);
+
+-- ── Migration v2 (run if you already applied the initial schema) ─
+-- These are idempotent — safe to run on a fresh schema too.
+
+alter table public.crystals
+  add column if not exists review_count      int          default 0,
+  add column if not exists rating            numeric(3,1) default 5.0,
+  add column if not exists display_price_sgd numeric(10,2);
+
+alter table public.crystal_variants
+  add column if not exists reiky_cost_mop numeric(10,2);
+
+alter table public.services
+  add column if not exists website_url text;
+
+-- Allow the public website (unauthenticated) to read published products
+create policy if not exists "Public read published crystals"
+  on public.crystals for select
+  using (status = 'published');
+
+create policy if not exists "Public read variants of published crystals"
+  on public.crystal_variants for select
+  using (exists (
+    select 1 from public.crystals c
+    where c.id = crystal_id and c.status = 'published'
+  ));
+
+create policy if not exists "Public read images of published crystals"
+  on public.crystal_images for select
+  using (exists (
+    select 1 from public.crystals c
+    where c.id = crystal_id and c.status = 'published'
+  ));

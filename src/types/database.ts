@@ -16,14 +16,17 @@ export interface Database {
           highlights: Json; properties: Json
           cost_price_mop: number | null; markup_pct: number
           status: 'draft' | 'published' | 'secret'; secret_token: string | null
-          badge: string | null; created_at: string; updated_at: string
+          badge: string | null
+          review_count: number; rating: number
+          display_price_sgd: number | null
+          created_at: string; updated_at: string
         }
         Insert: Omit<Database['public']['Tables']['crystals']['Row'], 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Database['public']['Tables']['crystals']['Insert']>
         Relationships: []
       }
       crystal_variants: {
-        Row: { id: string; crystal_id: string; bead_size_mm: number; cost_price_mop: number; sort_order: number; in_stock: boolean; created_at: string }
+        Row: { id: string; crystal_id: string; bead_size_mm: number; cost_price_mop: number; reiky_cost_mop: number | null; sort_order: number; in_stock: boolean; created_at: string }
         Insert: Omit<Database['public']['Tables']['crystal_variants']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['crystal_variants']['Insert']>
         Relationships: []
@@ -40,6 +43,7 @@ export interface Database {
           description: string | null; highlights: Json; tiers: Json
           price_sgd: number | null; status: 'draft' | 'published' | 'secret'
           secret_token: string | null; image_url: string | null
+          website_url: string | null
           created_at: string; updated_at: string
         }
         Insert: Omit<Database['public']['Tables']['services']['Row'], 'id' | 'created_at' | 'updated_at'>
