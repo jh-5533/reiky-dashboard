@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -48,6 +48,13 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-[#C4956A] tracking-wide">Reiky SG</h1>
           <p className="text-sm text-muted-foreground mt-1">Admin Dashboard</p>
         </div>
+
+        {!process.env.NEXT_PUBLIC_SUPABASE_URL && (
+          <div className="mb-4 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1">
+            <p className="font-semibold">⚠️ Supabase not connected</p>
+            <p>Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to Vercel Environment Variables, then redeploy.</p>
+          </div>
+        )}
 
         <Card>
           <CardHeader>
