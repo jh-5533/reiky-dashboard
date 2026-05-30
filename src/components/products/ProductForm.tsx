@@ -38,6 +38,7 @@ const highlightSchema = z.object({
 
 const variantSchema = z.object({
   bead_size_mm: z.string(),
+  bead_size_mm_max: z.string(),
   cost_price_mop: z.string(),
   reiky_cost_mop: z.string(),
   sell_price_sgd: z.string(),
@@ -85,10 +86,10 @@ function slugify(str: string) {
 }
 
 const DEFAULT_VARIANTS = [
-  { bead_size_mm: '6',  cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
-  { bead_size_mm: '8',  cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
-  { bead_size_mm: '10', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
-  { bead_size_mm: '12', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '6',  bead_size_mm_max: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '8',  bead_size_mm_max: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '10', bead_size_mm_max: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '12', bead_size_mm_max: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
 ]
 
 export function ProductForm({ crystal, variants = [], initialImages = [] }: Props) {
@@ -135,6 +136,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         variants.length > 0
           ? variants.map((v) => ({
               bead_size_mm: v.bead_size_mm.toString(),
+              bead_size_mm_max: v.bead_size_mm_max?.toString() ?? '',
               cost_price_mop: v.cost_price_mop.toString(),
               reiky_cost_mop: v.reiky_cost_mop?.toString() ?? '',
               sell_price_sgd: v.sell_price_sgd?.toString() ?? '',
@@ -237,6 +239,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           .map((v, i) => ({
             crystal_id: crystalId!,
             bead_size_mm: parseFloat(v.bead_size_mm),
+            bead_size_mm_max: v.bead_size_mm_max ? parseFloat(v.bead_size_mm_max) : null,
             cost_price_mop: parseFloat(v.cost_price_mop),
             reiky_cost_mop: v.reiky_cost_mop ? parseFloat(v.reiky_cost_mop) : null,
             sell_price_sgd: v.sell_price_sgd ? parseFloat(v.sell_price_sgd) : null,

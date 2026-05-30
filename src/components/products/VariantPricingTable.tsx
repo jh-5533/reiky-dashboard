@@ -20,6 +20,7 @@ export function VariantPricingTable({ rate }: Props) {
 
   const variants = watch('variants') as Array<{
     bead_size_mm: string
+    bead_size_mm_max: string
     cost_price_mop: string
     reiky_cost_mop: string
     sell_price_sgd: string
@@ -118,11 +119,21 @@ export function VariantPricingTable({ rate }: Props) {
                 <TableRow key={field.id}>
                   {/* Col 1: Size */}
                   <TableCell>
-                    <Input
-                      {...register(`variants.${index}.bead_size_mm`)}
-                      placeholder="8"
-                      className="w-16"
-                    />
+                    <div className="flex items-center gap-1">
+                      <Input
+                        {...register(`variants.${index}.bead_size_mm`)}
+                        placeholder="10"
+                        className="w-14"
+                        step="0.5"
+                      />
+                      <span className="text-muted-foreground text-xs select-none">–</span>
+                      <Input
+                        {...register(`variants.${index}.bead_size_mm_max`)}
+                        placeholder="opt"
+                        className="w-14 text-muted-foreground"
+                        step="0.5"
+                      />
+                    </div>
                   </TableCell>
 
                   {/* Col 2: Supplier Cost MOP */}
@@ -220,7 +231,7 @@ export function VariantPricingTable({ rate }: Props) {
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => append({ bead_size_mm: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' })}
+        onClick={() => append({ bead_size_mm: '', bead_size_mm_max: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' })}
       >
         <Plus size={14} className="mr-1" />
         {t('vpt_add_size')}

@@ -274,6 +274,9 @@ alter table public.crystal_variants
 alter table public.crystal_variants
   add column if not exists sell_price_sgd numeric(10,2);
 
+alter table public.crystal_variants
+  add column if not exists bead_size_mm_max numeric(4,1);
+
 alter table public.services
   add column if not exists website_url text;
 

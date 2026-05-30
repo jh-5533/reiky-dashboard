@@ -26,7 +26,7 @@ export interface Database {
         Relationships: []
       }
       crystal_variants: {
-        Row: { id: string; crystal_id: string; bead_size_mm: number; cost_price_mop: number; reiky_cost_mop: number | null; sell_price_sgd: number | null; sort_order: number; in_stock: boolean; created_at: string }
+        Row: { id: string; crystal_id: string; bead_size_mm: number; bead_size_mm_max: number | null; cost_price_mop: number; reiky_cost_mop: number | null; sell_price_sgd: number | null; sort_order: number; in_stock: boolean; created_at: string }
         Insert: Omit<Database['public']['Tables']['crystal_variants']['Row'], 'id' | 'created_at'>
         Update: Partial<Database['public']['Tables']['crystal_variants']['Insert']>
         Relationships: []
