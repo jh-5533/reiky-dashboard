@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { RefreshCw } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface RateResponse {
   rate: number
@@ -17,6 +18,7 @@ export function ExchangeRateSettings() {
   const [data, setData] = useState<RateResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [manualRate, setManualRate] = useState('')
+  const { t } = useLanguage()
 
   async function fetchRate() {
     setLoading(true)
@@ -31,43 +33,33 @@ export function ExchangeRateSettings() {
     }
   }
 
-  useEffect(() => {
-    fetchRate()
-  }, [])
+  useEffect(() => { fetchRate() }, [])
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
         <div>
-          <p className="text-sm font-medium">Current Rate</p>
+          <p className="text-sm font-medium">{t('settings_current_rate')}</p>
           <p className="text-2xl font-bold">
             {data ? `1 MOP = ${data.rate} SGD` : '—'}
           </p>
           {data && (
             <div className="flex items-center gap-2 mt-1">
-              <Badge variant="outline" className="text-xs capitalize">
-                {data.source}
-              </Badge>
+              <Badge variant="outline" className="text-xs capitalize">{data.source}</Badge>
               <span className="text-xs text-muted-foreground">
-                Last fetched:{' '}
-                {new Date(data.fetched_at).toLocaleString('en-SG')}
+                {t('settings_last_fetched')}: {new Date(data.fetched_at).toLocaleString('en-SG')}
               </span>
             </div>
           )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchRate}
-          disabled={loading}
-        >
+        <Button variant="outline" size="sm" onClick={fetchRate} disabled={loading}>
           <RefreshCw size={14} className={`mr-1 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('settings_refresh')}
         </Button>
       </div>
 
       <div className="space-y-2 max-w-xs">
-        <Label>Manual Override</Label>
+        <Label>{t('settings_manual_override')}</Label>
         <div className="flex gap-2">
           <Input
             type="number"
@@ -82,21 +74,13 @@ export function ExchangeRateSettings() {
             size="sm"
             onClick={() => {
               const r = parseFloat(manualRate)
-              if (!isNaN(r)) {
-                setData({
-                  rate: r,
-                  source: 'fallback',
-                  fetched_at: new Date().toISOString(),
-                })
-              }
+              if (!isNaN(r)) setData({ rate: r, source: 'fallback', fetched_at: new Date().toISOString() })
             }}
           >
-            Apply
+            {t('settings_apply')}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Override is session-only. It will reset on page reload.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('settings_override_note')}</p>
       </div>
     </div>
   )

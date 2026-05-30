@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { OrderStatusFilter } from '@/components/orders/OrderStatusFilter'
+import { getLang, t } from '@/lib/i18n/server'
 import type { Database } from '@/types/database'
 
 type Order = Database['public']['Tables']['orders']['Row']
@@ -44,7 +45,7 @@ interface SearchParams {
   status?: string
 }
 
-async function OrderList({ searchParams }: { searchParams: SearchParams }) {
+async function OrderList({ searchParams, lang }: { searchParams: SearchParams; lang: 'en' | 'zh' }) {
   let orders: Order[] = []
 
   try {
@@ -65,13 +66,13 @@ async function OrderList({ searchParams }: { searchParams: SearchParams }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Order #</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Customer</TableHead>
-          <TableHead className="text-right">Total SGD</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Payment</TableHead>
-          <TableHead className="w-20">Actions</TableHead>
+          <TableHead>{t(lang, 'orders_col_number')}</TableHead>
+          <TableHead>{t(lang, 'orders_col_date')}</TableHead>
+          <TableHead>{t(lang, 'orders_col_customer')}</TableHead>
+          <TableHead className="text-right">{t(lang, 'orders_col_total')}</TableHead>
+          <TableHead>{t(lang, 'orders_col_status')}</TableHead>
+          <TableHead>{t(lang, 'orders_col_payment')}</TableHead>
+          <TableHead className="w-20">{t(lang, 'orders_col_actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -96,7 +97,7 @@ async function OrderList({ searchParams }: { searchParams: SearchParams }) {
                 href={`/orders/${order.id}`}
                 className="inline-flex items-center rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium hover:bg-muted transition-colors"
               >
-                View
+                {t(lang, 'orders_view')}
               </Link>
             </TableCell>
           </TableRow>
@@ -104,7 +105,7 @@ async function OrderList({ searchParams }: { searchParams: SearchParams }) {
         {orders.length === 0 && (
           <TableRow>
             <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-              No orders found.
+              {t(lang, 'orders_empty')}
             </TableCell>
           </TableRow>
         )}
@@ -118,30 +119,30 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const searchParams = await rawSearchParams
+  const [searchParams, lang] = await Promise.all([rawSearchParams, getLang()])
 
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage customer orders.</p>
+          <h1 className="text-2xl font-bold">{t(lang, 'orders_title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t(lang, 'orders_subtitle')}</p>
         </div>
         <button className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/80 transition-colors">
-          New Order
+          {t(lang, 'orders_new')}
         </button>
       </div>
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">All Orders</CardTitle>
+          <CardTitle className="text-base">{t(lang, 'orders_all')}</CardTitle>
           <Suspense>
             <OrderStatusFilter />
           </Suspense>
         </CardHeader>
         <CardContent className="p-0">
-          <Suspense fallback={<div className="py-12 text-center text-muted-foreground">Loading orders…</div>}>
-            <OrderList searchParams={searchParams} />
+          <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t(lang, 'orders_loading')}</div>}>
+            <OrderList searchParams={searchParams} lang={lang} />
           </Suspense>
         </CardContent>
       </Card>

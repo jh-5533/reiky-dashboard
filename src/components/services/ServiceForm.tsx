@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator'
 import { ImageUploader, type UploadedImage } from '@/components/products/ImageUploader'
 import { createClient } from '@/lib/supabase/client'
 import { Trash2, Plus } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Service = Database['public']['Tables']['services']['Row']
@@ -75,6 +76,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
   const [saving, setSaving]   = useState(false)
   const [error, setError]     = useState<string | null>(null)
   const [images, setImages]   = useState<UploadedImage[]>(initialImages)
+  const { t } = useLanguage()
 
   const hasTiers = Array.isArray(service?.tiers) && (service.tiers as unknown[]).length > 0
 
@@ -181,11 +183,11 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
 
       {/* Basic Info */}
       <Card>
-        <CardHeader><CardTitle>Basic Information</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('form_basic_info')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Name *</Label>
+              <Label>{t('form_name')} *</Label>
               <Input
                 {...form.register('name')}
                 placeholder="Cleansing Incense Set"
@@ -199,29 +201,29 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
               )}
             </div>
             <div className="space-y-2">
-              <Label>Slug *</Label>
+              <Label>{t('form_slug')} *</Label>
               <Input {...form.register('slug')} placeholder="cleansing-incense-set" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t('form_category')}</Label>
               <Select
                 defaultValue={service?.category ?? ''}
                 onValueChange={(v) => form.setValue('category', String(v))}
               >
-                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('form_select_category')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="incense">Incense</SelectItem>
-                  <SelectItem value="bazi">Bazi</SelectItem>
-                  <SelectItem value="fengshui">Fengshui</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="incense">{t('svc_category_incense')}</SelectItem>
+                  <SelectItem value="bazi">{t('svc_category_bazi')}</SelectItem>
+                  <SelectItem value="fengshui">{t('svc_category_fengshui')}</SelectItem>
+                  <SelectItem value="custom">{t('svc_category_custom')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>{t('form_status')}</Label>
               <Select
                 defaultValue={service?.status ?? 'draft'}
                 onValueChange={(v) =>
@@ -230,32 +232,30 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="secret">Secret</SelectItem>
+                  <SelectItem value="draft">{t('status_draft')}</SelectItem>
+                  <SelectItem value="published">{t('status_published')}</SelectItem>
+                  <SelectItem value="secret">{t('status_secret')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Overall Description</Label>
+            <Label>{t('svc_overall_desc')}</Label>
             <Textarea
               {...form.register('description')}
               rows={4}
-              placeholder="Describe this service overall…"
+              placeholder={t('svc_desc_placeholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Website Page URL</Label>
+            <Label>{t('svc_website_url')}</Label>
             <Input
               {...form.register('website_url')}
               placeholder="/services/service.html?id=cleansing-incense"
             />
-            <p className="text-xs text-muted-foreground">
-              Leave blank to auto-generate from slug. Used for secret link generation and buy buttons.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('svc_url_hint')}</p>
           </div>
         </CardContent>
       </Card>
@@ -263,8 +263,8 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
       {/* Images */}
       <Card>
         <CardHeader>
-          <CardTitle>Images</CardTitle>
-          <p className="text-sm text-muted-foreground">Upload up to 6 photos. First image is the hero.</p>
+          <CardTitle>{t('form_images')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t('form_images_hint')}</p>
         </CardHeader>
         <CardContent>
           <ImageUploader images={images} onChange={setImages} maxImages={6} />
@@ -273,7 +273,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
 
       {/* Highlights */}
       <Card>
-        <CardHeader><CardTitle>Highlights</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('form_highlights')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           {highlightFields.map((field, index) => (
             <div key={field.id} className="flex gap-3 items-start">
@@ -301,14 +301,14 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
             type="button" variant="outline" size="sm"
             onClick={() => addHighlight({ icon: '', title: '', description: '' })}
           >
-            <Plus size={14} className="mr-1" />Add Highlight
+            <Plus size={14} className="mr-1" />{t('form_add_highlight')}
           </Button>
         </CardContent>
       </Card>
 
       {/* Pricing */}
       <Card>
-        <CardHeader><CardTitle>Pricing</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('svc_pricing')}</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-3">
             <Button
@@ -317,7 +317,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
               size="sm"
               onClick={() => form.setValue('pricing_type', 'single')}
             >
-              Single Price
+              {t('svc_single_price')}
             </Button>
             <Button
               type="button"
@@ -325,28 +325,28 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
               size="sm"
               onClick={() => form.setValue('pricing_type', 'tiered')}
             >
-              Tiered Pricing
+              {t('svc_tiered')}
             </Button>
           </div>
 
           {pricingType === 'single' && (
             <div className="grid grid-cols-3 gap-4 items-end">
               <div className="space-y-2">
-                <Label>Selling Price (SGD)</Label>
+                <Label>{t('svc_selling_price')}</Label>
                 <Input
                   {...form.register('price_sgd')}
                   type="number" step="0.01" placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Your Cost (SGD)</Label>
+                <Label>{t('svc_your_cost')}</Label>
                 <Input
                   {...form.register('cost_sgd')}
                   type="number" step="0.01" placeholder="0.00"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Margin</Label>
+                <Label>{t('svc_margin')}</Label>
                 <div className="h-9 px-3 flex items-center rounded-md border bg-muted text-sm font-medium text-pink-600">
                   {marginPct(watchedPrice, watchedCost)}
                 </div>
@@ -360,11 +360,11 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                 <table className="w-full text-sm">
                   <thead className="bg-[#fafafa] border-b border-[#e8e8e8]">
                     <tr>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">Tier Name</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">Selling Price (SGD)</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">Your Cost (SGD)</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">Margin</th>
-                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">Tier Description</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_tier_name')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_selling_price')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_your_cost')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_margin')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_tier_desc')}</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -403,7 +403,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                           <td className="px-4 py-2">
                             <Input
                               {...form.register(`tiers.${index}.description`)}
-                              placeholder="What's included at this tier"
+                              placeholder={t('svc_tier_included')}
                               className="h-8"
                             />
                           </td>
@@ -426,7 +426,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                 type="button" variant="outline" size="sm"
                 onClick={() => addTier({ name: '', price_sgd: '', cost_sgd: '', description: '' })}
               >
-                <Plus size={14} className="mr-1" />Add Tier
+                <Plus size={14} className="mr-1" />{t('svc_add_tier')}
               </Button>
             </div>
           )}
@@ -437,10 +437,10 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={() => router.push('/services')}>
-          Cancel
+          {t('form_cancel')}
         </Button>
         <Button type="submit" disabled={saving}>
-          {saving ? 'Saving…' : service ? 'Save Changes' : 'Create Service'}
+          {saving ? t('form_saving') : service ? t('form_save') : t('svc_create')}
         </Button>
       </div>
     </form>

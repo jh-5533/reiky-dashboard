@@ -4,15 +4,11 @@ import { useFieldArray, useFormContext } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { calcPrice } from '@/lib/pricing'
 import { Trash2, Plus } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Props {
   rate: number
@@ -22,6 +18,7 @@ interface Props {
 export function VariantPricingTable({ rate, markupPct }: Props) {
   const { control, register, watch } = useFormContext()
   const { fields, append, remove } = useFieldArray({ control, name: 'variants' })
+  const { t } = useLanguage()
 
   const variants = watch('variants') as Array<{
     bead_size_mm: string
@@ -37,26 +34,26 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24 whitespace-nowrap">Size (mm)</TableHead>
+              <TableHead className="w-24 whitespace-nowrap">{t('vpt_size')}</TableHead>
               <TableHead className="whitespace-nowrap">
-                Supplier Cost
+                {t('vpt_supplier_cost')}
                 <br />
-                <span className="text-xs font-normal text-muted-foreground">MOP — declare at customs</span>
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_mop_customs')}</span>
               </TableHead>
               <TableHead className="text-center whitespace-nowrap">
-                + 9% Import GST
+                {t('vpt_import_gst')}
                 <br />
                 <span className="text-xs font-normal text-muted-foreground">MOP / SGD</span>
               </TableHead>
               <TableHead className="whitespace-nowrap">
-                Reiky Cost
+                {t('vpt_reiky_cost')}
                 <br />
-                <span className="text-xs font-normal text-muted-foreground">Macau shop price — MOP / SGD</span>
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_macau_price')}</span>
               </TableHead>
               <TableHead className="text-center whitespace-nowrap">
-                Final Price
+                {t('vpt_final_price')}
                 <br />
-                <span className="text-xs font-normal text-muted-foreground">SGD / margin</span>
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_sgd_margin')}</span>
               </TableHead>
               <TableHead className="w-10" />
             </TableRow>
@@ -73,27 +70,12 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
 
               return (
                 <TableRow key={field.id}>
-                  {/* Col 1 — Bead size */}
                   <TableCell>
-                    <Input
-                      {...register(`variants.${index}.bead_size_mm`)}
-                      placeholder="e.g. 8"
-                      className="w-20"
-                    />
+                    <Input {...register(`variants.${index}.bead_size_mm`)} placeholder="e.g. 8" className="w-20" />
                   </TableCell>
-
-                  {/* Col 2 — Supplier cost (MOP) */}
                   <TableCell>
-                    <Input
-                      {...register(`variants.${index}.cost_price_mop`)}
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="w-28"
-                    />
+                    <Input {...register(`variants.${index}.cost_price_mop`)} type="number" step="0.01" placeholder="0.00" className="w-28" />
                   </TableCell>
-
-                  {/* Col 3 — +9% GST (calculated) */}
                   <TableCell className="text-center text-sm">
                     {gstMop != null ? (
                       <div>
@@ -102,44 +84,26 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
                       </div>
                     ) : '—'}
                   </TableCell>
-
-                  {/* Col 4 — Reiky cost (editable) */}
                   <TableCell>
                     <div className="space-y-1">
-                      <Input
-                        {...register(`variants.${index}.reiky_cost_mop`)}
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00 MOP"
-                        className="w-28"
-                      />
+                      <Input {...register(`variants.${index}.reiky_cost_mop`)} type="number" step="0.01" placeholder="0.00 MOP" className="w-28" />
                       {reikySgd != null && (
-                        <div className="text-xs text-muted-foreground pl-1">
-                          ≈ S${reikySgd.toFixed(2)}
-                        </div>
+                        <div className="text-xs text-muted-foreground pl-1">≈ S${reikySgd.toFixed(2)}</div>
                       )}
                     </div>
                   </TableCell>
-
-                  {/* Col 5 — Final SGD + margin (calculated from Reiky cost) */}
                   <TableCell className="text-center">
                     {pricing ? (
                       <div>
                         <div className="font-medium text-sm">S${pricing.finalSgd.toFixed(2)}</div>
                         <div className="text-xs text-pink-600 font-medium">
-                          {pricing.effectiveMarginPct.toFixed(1)}% margin
+                          {pricing.effectiveMarginPct.toFixed(1)} {t('vpt_margin')}
                         </div>
                       </div>
                     ) : '—'}
                   </TableCell>
-
                   <TableCell>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => remove(index)}
-                    >
+                    <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
                       <Trash2 size={14} />
                     </Button>
                   </TableCell>
@@ -157,7 +121,7 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
         onClick={() => append({ bead_size_mm: '', cost_price_mop: '', reiky_cost_mop: '' })}
       >
         <Plus size={14} className="mr-1" />
-        Add Size
+        {t('vpt_add_size')}
       </Button>
     </div>
   )

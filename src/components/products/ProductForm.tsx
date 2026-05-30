@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
 import { calcPrice } from '@/lib/pricing'
 import { Trash2, Plus } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Crystal = Database['public']['Tables']['crystals']['Row']
@@ -98,6 +99,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
   const [rate, setRate] = useState(0.175)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -150,14 +152,12 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
   const watchedName = form.watch('name')
   const watchedVariants = form.watch('variants')
 
-  // Auto-generate slug from name (only when not editing)
   useEffect(() => {
     if (!crystal) {
       form.setValue('slug', slugify(watchedName))
     }
   }, [watchedName, crystal, form])
 
-  // Fetch exchange rate
   useEffect(() => {
     fetch('/api/exchange-rate')
       .then((r) => r.json())
@@ -165,7 +165,6 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
       .catch(() => {})
   }, [])
 
-  // Find the first variant with a cost for the markup table display
   const firstVariantCost = parseFloat(
     watchedVariants?.find((v) => v.cost_price_mop)?.cost_price_mop ?? '0'
   ) || 0
@@ -178,13 +177,11 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
       try {
         const supabase = createClient()
 
-        // Calculate cost_price_mop from first variant with a cost
         const firstCost = values.variants.find((v) => v.cost_price_mop)
         const cost_price_mop = firstCost
           ? parseFloat(firstCost.cost_price_mop)
           : null
 
-        // Compute display_price_sgd from first variant that has a Reiky cost
         const firstReikyVariant = values.variants.find((v) => v.reiky_cost_mop && v.cost_price_mop)
         const display_price_sgd = firstReikyVariant
           ? calcPrice(
@@ -232,7 +229,6 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
         if (!crystalId) throw new Error('No crystal ID')
 
-        // Upsert variants
         if (crystal) {
           await supabase
             .from('crystal_variants')
@@ -255,16 +251,9 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           await supabase.from('crystal_variants').insert(variantsToInsert)
         }
 
-        // TODO: replace with actual bucket when configured
-        // Image upload to Supabase Storage 'product-images' bucket
         for (let i = 0; i < images.length; i++) {
           const img = images[i]
-          if (!img.file) continue // already uploaded
-          // TODO: upload img.file to Supabase storage
-          // const { data: uploadData } = await supabase.storage
-          //   .from('product-images')
-          //   .upload(`${crystalId}/${img.id}`, img.file)
-          // then insert crystal_images record
+          if (!img.file) continue
         }
 
         router.push('/products')
@@ -278,6 +267,17 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
     [crystal, images, router]
   )
 
+  const propertyFields: Array<[keyof FormValues['properties'], Parameters<typeof t>[0]]> = [
+    ['chakra',     'form_chakra'],
+    ['element',    'form_element'],
+    ['origin',     'form_origin'],
+    ['hardness',   'form_hardness'],
+    ['colour',     'form_colour'],
+    ['zodiac',     'form_zodiac'],
+    ['intention',  'form_intention'],
+    ['bead_size',  'form_bead_size'],
+  ]
+
   return (
     <FormProvider {...form}>
       <form onSubmit={form.handleSubmit(handleSave)}>
@@ -289,8 +289,8 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
         <Tabs defaultValue="edit">
           <TabsList className="mb-4">
-            <TabsTrigger value="edit">Edit</TabsTrigger>
-            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="edit">{t('common_edit')}</TabsTrigger>
+            <TabsTrigger value="preview">{t('form_tab_preview')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="preview">
@@ -302,41 +302,41 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         {/* A. Basic Info */}
         <Card>
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>{t('form_basic_info')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Name *</Label>
+                <Label>{t('form_name')} *</Label>
                 <Input {...form.register('name')} placeholder="Rose Quartz Bracelet" />
                 {form.formState.errors.name && (
                   <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
                 )}
               </div>
               <div className="space-y-2">
-                <Label>Slug *</Label>
+                <Label>{t('form_slug')} *</Label>
                 <Input {...form.register('slug')} placeholder="rose-quartz-bracelet" />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Stone Type</Label>
+                <Label>{t('form_stone_type')}</Label>
                 <Input {...form.register('stone_type')} placeholder="Rose Quartz" />
               </div>
               <div className="space-y-2">
-                <Label>Category</Label>
+                <Label>{t('form_category')}</Label>
                 <Select
                   defaultValue={crystal?.category ?? ''}
                   onValueChange={(v) => form.setValue('category', String(v))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder={t('form_select_category')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="wealth">Wealth</SelectItem>
-                    <SelectItem value="love">Love</SelectItem>
-                    <SelectItem value="protection">Protection</SelectItem>
+                    <SelectItem value="wealth">{t('filters_wealth')}</SelectItem>
+                    <SelectItem value="love">{t('filters_love')}</SelectItem>
+                    <SelectItem value="protection">{t('filters_protection')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -344,24 +344,24 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Badge</Label>
+                <Label>{t('form_badge')}</Label>
                 <Select
                   defaultValue={crystal?.badge ?? ''}
                   onValueChange={(v) => form.setValue('badge', String(v))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="None" />
+                    <SelectValue placeholder={t('badge_none')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
-                    <SelectItem value="Bestseller">Bestseller</SelectItem>
-                    <SelectItem value="Popular">Popular</SelectItem>
-                    <SelectItem value="New">New</SelectItem>
+                    <SelectItem value="">{t('badge_none')}</SelectItem>
+                    <SelectItem value="Bestseller">{t('badge_bestseller')}</SelectItem>
+                    <SelectItem value="Popular">{t('badge_popular')}</SelectItem>
+                    <SelectItem value="New">{t('badge_new')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Status</Label>
+                <Label>{t('form_status')}</Label>
                 <Select
                   defaultValue={crystal?.status ?? 'draft'}
                   onValueChange={(v) =>
@@ -372,9 +372,9 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="secret">Secret</SelectItem>
+                    <SelectItem value="draft">{t('status_draft')}</SelectItem>
+                    <SelectItem value="published">{t('status_published')}</SelectItem>
+                    <SelectItem value="secret">{t('status_secret')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -382,7 +382,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Star Rating (1–5)</Label>
+                <Label>{t('form_star_rating')}</Label>
                 <Input
                   {...form.register('rating', { valueAsNumber: true })}
                   type="number"
@@ -393,7 +393,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
                 />
               </div>
               <div className="space-y-2">
-                <Label>Review Count</Label>
+                <Label>{t('form_review_count')}</Label>
                 <Input
                   {...form.register('review_count', { valueAsNumber: true })}
                   type="number"
@@ -404,7 +404,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('form_description')}</Label>
               <Textarea
                 {...form.register('description')}
                 rows={4}
@@ -417,10 +417,8 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         {/* B. Images */}
         <Card>
           <CardHeader>
-            <CardTitle>Images</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Upload up to 6 images. First image is the hero.
-            </p>
+            <CardTitle>{t('form_images')}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t('form_images_hint')}</p>
           </CardHeader>
           <CardContent>
             <ImageUploader images={images} onChange={setImages} maxImages={6} />
@@ -430,27 +428,16 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         {/* C. Crystal Properties */}
         <Card>
           <CardHeader>
-            <CardTitle>Crystal Properties</CardTitle>
+            <CardTitle>{t('form_crystal_props')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              {(
-                [
-                  ['chakra', 'Chakra'],
-                  ['element', 'Element'],
-                  ['origin', 'Origin'],
-                  ['hardness', 'Hardness'],
-                  ['colour', 'Colour'],
-                  ['zodiac', 'Zodiac'],
-                  ['intention', 'Intention'],
-                  ['bead_size', 'Bead Size'],
-                ] as const
-              ).map(([key, label]) => (
+              {propertyFields.map(([key, labelKey]) => (
                 <div key={key} className="space-y-2">
-                  <Label>{label}</Label>
+                  <Label>{t(labelKey)}</Label>
                   <Input
                     {...form.register(`properties.${key}`)}
-                    placeholder={label}
+                    placeholder={t(labelKey)}
                   />
                 </div>
               ))}
@@ -461,7 +448,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         {/* D. Highlights */}
         <Card>
           <CardHeader>
-            <CardTitle>Highlights</CardTitle>
+            <CardTitle>{t('form_highlights')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {highlightFields.map((field, index) => (
@@ -498,7 +485,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
               onClick={() => addHighlight({ icon: '', title: '', description: '' })}
             >
               <Plus size={14} className="mr-1" />
-              Add Highlight
+              {t('form_add_highlight')}
             </Button>
           </CardContent>
         </Card>
@@ -506,12 +493,12 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
         {/* E. Pricing by MM size */}
         <Card>
           <CardHeader>
-            <CardTitle>Pricing by Bead Size</CardTitle>
+            <CardTitle>{t('form_pricing')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="space-y-2">
-                <Label>Markup % (applies to all sizes)</Label>
+                <Label>{t('form_markup_pct')}</Label>
                 <Input
                   {...form.register('markup_pct')}
                   type="number"
@@ -528,7 +515,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
 
             {firstVariantCost > 0 && (
               <div className="mt-4">
-                <p className="text-sm font-medium mb-2">Markup Reference Table</p>
+                <p className="text-sm font-medium mb-2">{t('form_markup_ref_table')}</p>
                 <MarkupTableDisplay
                   costMop={firstVariantCost}
                   config={{ mopSgdRate: rate, ccFeePct: 3.4, gstPct: 9 }}
@@ -547,10 +534,10 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
               variant="outline"
               onClick={() => router.push('/products')}
             >
-              Cancel
+              {t('form_cancel')}
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Saving…' : crystal ? 'Save Changes' : 'Create Product'}
+              {saving ? t('form_saving') : crystal ? t('form_save') : t('form_create')}
             </Button>
           </div>
 

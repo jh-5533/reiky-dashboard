@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Customer = Database['public']['Tables']['customers']['Row']
@@ -23,6 +24,7 @@ export function CustomerProfileClient({ customer }: Props) {
   const [tagsInput, setTagsInput] = useState((customer.tags ?? []).join(', '))
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const { t } = useLanguage()
 
   async function handleSave() {
     setSaving(true)
@@ -30,7 +32,7 @@ export function CustomerProfileClient({ customer }: Props) {
       const supabase = createClient()
       const tags = tagsInput
         .split(',')
-        .map((t) => t.trim())
+        .map((s) => s.trim())
         .filter(Boolean)
       await supabase
         .from('customers')
@@ -54,58 +56,41 @@ export function CustomerProfileClient({ customer }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Contact &amp; Notes</CardTitle>
+        <CardTitle>{t('customers_contact_notes')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Full Name</Label>
-            <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Jane Doe"
-            />
+            <Label>{t('customers_full_name')}</Label>
+            <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Jane Doe" />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              placeholder="jane@example.com"
-            />
+            <Label>{t('customers_col_email')}</Label>
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="jane@example.com" />
           </div>
           <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+65 9123 4567"
-            />
+            <Label>{t('customers_col_phone')}</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+65 9123 4567" />
           </div>
           <div className="space-y-2">
-            <Label>Tags (comma separated)</Label>
-            <Input
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              placeholder="vip, returning"
-            />
+            <Label>{t('customers_tags_label')}</Label>
+            <Input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="vip, returning" />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Notes</Label>
+          <Label>{t('orders_detail_notes')}</Label>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            placeholder="Internal notes about this customer…"
+            placeholder={t('customers_notes_ph')}
           />
         </div>
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : saved ? 'Saved!' : 'Save Changes'}
+            {saving ? t('form_saving') : saved ? t('common_saved') : t('common_save')}
           </Button>
         </div>
       </CardContent>

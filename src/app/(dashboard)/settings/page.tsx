@@ -5,80 +5,58 @@ import { ExchangeRateSettings } from '@/components/settings/ExchangeRateSettings
 import { FeesAndTaxSettings } from '@/components/settings/FeesAndTaxSettings'
 import { PricingDefaultsSettings } from '@/components/settings/PricingDefaultsSettings'
 import { UsersSettings } from '@/components/settings/UsersSettings'
+import { getLang, t } from '@/lib/i18n/server'
 import type { Database } from '@/types/database'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
 export default async function SettingsPage() {
   let profiles: Profile[] = []
-
   try {
     const supabase = await createClient()
     const { data } = await supabase.from('profiles').select('*').order('created_at')
     profiles = data ?? []
-  } catch {
-    profiles = []
-  }
+  } catch { profiles = [] }
+
+  const lang = await getLang()
 
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Configure your dashboard preferences.
-        </p>
+        <h1 className="text-2xl font-bold">{t(lang, 'settings_title')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t(lang, 'settings_subtitle')}</p>
       </div>
 
-      {/* Exchange Rate */}
       <Card>
         <CardHeader>
-          <CardTitle>Live Exchange Rate</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            MOP → SGD rate used for all pricing calculations.
-          </p>
+          <CardTitle>{t(lang, 'settings_exchange_rate')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t(lang, 'settings_exchange_desc')}</p>
         </CardHeader>
-        <CardContent>
-          <ExchangeRateSettings />
-        </CardContent>
+        <CardContent><ExchangeRateSettings /></CardContent>
       </Card>
 
       <Separator />
 
-      {/* Fees & Tax */}
       <Card>
-        <CardHeader>
-          <CardTitle>Fees &amp; Tax</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <FeesAndTaxSettings />
-        </CardContent>
+        <CardHeader><CardTitle>{t(lang, 'settings_fees_tax')}</CardTitle></CardHeader>
+        <CardContent><FeesAndTaxSettings /></CardContent>
       </Card>
 
       <Separator />
 
-      {/* Pricing defaults */}
       <Card>
-        <CardHeader>
-          <CardTitle>Pricing Defaults</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PricingDefaultsSettings />
-        </CardContent>
+        <CardHeader><CardTitle>{t(lang, 'settings_pricing_defaults')}</CardTitle></CardHeader>
+        <CardContent><PricingDefaultsSettings /></CardContent>
       </Card>
 
       <Separator />
 
-      {/* Users */}
       <Card>
         <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Manage staff and admin access.
-          </p>
+          <CardTitle>{t(lang, 'settings_users')}</CardTitle>
+          <p className="text-sm text-muted-foreground">{t(lang, 'settings_users_desc')}</p>
         </CardHeader>
-        <CardContent>
-          <UsersSettings profiles={profiles} />
-        </CardContent>
+        <CardContent><UsersSettings profiles={profiles} /></CardContent>
       </Card>
     </div>
   )

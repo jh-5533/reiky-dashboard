@@ -10,12 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Separator } from '@/components/ui/separator'
 import { calcPrice, buildMarkupTable } from '@/lib/pricing'
@@ -23,6 +18,7 @@ import type { PricingResult } from '@/lib/pricing'
 import { createClient } from '@/lib/supabase/client'
 import { calcBullBear } from '@/lib/pricing'
 import type { BullBearResult } from '@/lib/pricing'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Crystal = Database['public']['Tables']['crystals']['Row']
@@ -47,11 +43,8 @@ export default function PricingPage() {
   const [crystals, setCrystals] = useState<Crystal[]>([])
   const [loadingCrystals, setLoadingCrystals] = useState(false)
   const [analysisRan, setAnalysisRan] = useState(false)
-  const [bullBear, setBullBear] = useState<{
-    bear: BullBearResult
-    base: BullBearResult
-    bull: BullBearResult
-  } | null>(null)
+  const [bullBear, setBullBear] = useState<{ bear: BullBearResult; base: BullBearResult; bull: BullBearResult } | null>(null)
+  const { t } = useLanguage()
 
   const { register, watch, handleSubmit } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -85,11 +78,7 @@ export default function PricingPage() {
       const supabase = createClient()
       const { data } = await supabase.from('crystals').select('*')
       setCrystals((data ?? []) as Crystal[])
-    } catch {
-      setCrystals([])
-    } finally {
-      setLoadingCrystals(false)
-    }
+    } catch { setCrystals([]) } finally { setLoadingCrystals(false) }
   }
 
   function runAnalysis() {
@@ -98,32 +87,33 @@ export default function PricingPage() {
       .filter((c) => c.cost_price_mop != null)
       .map((c) => ({ costMop: c.cost_price_mop!, markupPct: c.markup_pct, quantity: 1 }))
     if (items.length === 0) return
-    const analysis = calcBullBear({
-      items,
-      config: { mopSgdRate: rate.rate, ccFeePct: 3.4, gstPct: 9 },
-    })
-    setBullBear(analysis)
+    setBullBear(calcBullBear({ items, config: { mopSgdRate: rate.rate, ccFeePct: 3.4, gstPct: 9 } }))
     setAnalysisRan(true)
   }
+
+  const resultRows: Array<{ key: 'pricing_cost_sgd' | 'pricing_retail_sgd' | 'pricing_after_cc' | 'pricing_final_gst' | 'pricing_margin'; value: string; bold: boolean }> = result ? [
+    { key: 'pricing_cost_sgd',  value: `S$${result.costSgd.toFixed(2)}`,                bold: false },
+    { key: 'pricing_retail_sgd', value: `S$${result.retailSgd.toFixed(2)}`,             bold: false },
+    { key: 'pricing_after_cc',  value: `S$${result.withCcSgd.toFixed(2)}`,              bold: false },
+    { key: 'pricing_final_gst', value: `S$${result.finalSgd.toFixed(2)}`,               bold: true  },
+    { key: 'pricing_margin',    value: `${result.effectiveMarginPct.toFixed(1)}%`,       bold: true  },
+  ] : []
 
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold">Pricing</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Calculate prices and run bull/bear scenarios.
-        </p>
+        <h1 className="text-2xl font-bold">{t('pricing_title')}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t('pricing_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* LEFT: Pricing Calculator */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Pricing Calculator</CardTitle>
+              <CardTitle>{t('pricing_calculator')}</CardTitle>
               {rate && (
                 <p className="text-xs text-muted-foreground">
-                  Live rate: 1 MOP = {rate.rate} SGD
+                  1 MOP = {rate.rate} SGD
                   <Badge variant="outline" className="ml-2 text-xs">{rate.source}</Badge>
                 </p>
               )}
@@ -132,11 +122,11 @@ export default function PricingPage() {
               <form onSubmit={handleSubmit(recalculate)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Cost (MOP)</Label>
+                    <Label>{t('pricing_cost_mop')}</Label>
                     <Input type="number" step="0.01" {...register('costMop')} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Markup %</Label>
+                    <Label>{t('pricing_markup')}</Label>
                     <Input type="number" step="1" {...register('markupPct')} />
                   </div>
                 </div>
@@ -146,15 +136,9 @@ export default function PricingPage() {
                 <div className="mt-6 space-y-3">
                   <Separator />
                   <div className="space-y-2">
-                    {[
-                      { label: 'Cost SGD', value: `S$${result.costSgd.toFixed(2)}` },
-                      { label: 'Retail SGD', value: `S$${result.retailSgd.toFixed(2)}` },
-                      { label: 'After CC fee (3.4%)', value: `S$${result.withCcSgd.toFixed(2)}` },
-                      { label: 'Final w/ GST (9%)', value: `S$${result.finalSgd.toFixed(2)}`, bold: true },
-                      { label: 'Your margin %', value: `${result.effectiveMarginPct.toFixed(1)}%`, bold: true },
-                    ].map(({ label, value, bold }) => (
-                      <div key={label} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{label}</span>
+                    {resultRows.map(({ key, value, bold }) => (
+                      <div key={key} className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{t(key)}</span>
                         <span className={bold ? 'font-semibold' : ''}>{value}</span>
                       </div>
                     ))}
@@ -167,18 +151,18 @@ export default function PricingPage() {
           {markupTable.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Markup Table (30–100%)</CardTitle>
+                <CardTitle className="text-base">{t('pricing_markup_table')}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-80 overflow-y-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Markup %</TableHead>
-                        <TableHead className="text-right">Cost SGD</TableHead>
-                        <TableHead className="text-right">Retail SGD</TableHead>
-                        <TableHead className="text-right">Final SGD</TableHead>
-                        <TableHead className="text-right">Margin %</TableHead>
+                        <TableHead>{t('pricing_markup')}</TableHead>
+                        <TableHead className="text-right">{t('pricing_cost_sgd')}</TableHead>
+                        <TableHead className="text-right">{t('pricing_retail_sgd')}</TableHead>
+                        <TableHead className="text-right">{t('pricing_col_final')}</TableHead>
+                        <TableHead className="text-right">{t('pricing_col_margin')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -202,33 +186,30 @@ export default function PricingPage() {
           )}
         </div>
 
-        {/* RIGHT: Bull/Bear Analysis */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Bull / Bear Analysis</CardTitle>
-              <p className="text-xs text-muted-foreground">
-                Bull/Bear adjusts your set markups by ±20% to model discount vs premium scenarios.
-              </p>
+              <CardTitle>{t('pricing_bull_bear')}</CardTitle>
+              <p className="text-xs text-muted-foreground">{t('pricing_bull_bear_desc')}</p>
             </CardHeader>
             <CardContent className="space-y-4">
               <Button onClick={loadCrystals} variant="outline" disabled={loadingCrystals}>
-                {loadingCrystals ? 'Loading…' : 'Load All Products'}
+                {loadingCrystals ? t('pricing_loading') : t('pricing_load_products')}
               </Button>
 
               {crystals.length > 0 && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    {crystals.length} products loaded.{' '}
+                    {crystals.length} {t('pricing_title').toLowerCase()}.{' '}
                     {crystals.filter((c) => c.cost_price_mop != null).length} with cost data.
                   </p>
                   <div className="max-h-48 overflow-y-auto rounded border">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Product</TableHead>
-                          <TableHead className="text-right">Cost (MOP)</TableHead>
-                          <TableHead className="text-right">Markup %</TableHead>
+                          <TableHead>{t('pricing_product')}</TableHead>
+                          <TableHead className="text-right">{t('pricing_cost_mop')}</TableHead>
+                          <TableHead className="text-right">{t('pricing_markup')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -242,7 +223,7 @@ export default function PricingPage() {
                       </TableBody>
                     </Table>
                   </div>
-                  <Button onClick={runAnalysis}>Run Analysis</Button>
+                  <Button onClick={runAnalysis}>{t('pricing_run_analysis')}</Button>
                 </div>
               )}
             </CardContent>
@@ -251,39 +232,33 @@ export default function PricingPage() {
           {analysisRan && bullBear && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Analysis Results</CardTitle>
+                <CardTitle className="text-base">{t('pricing_analysis_results')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Metric</TableHead>
-                      <TableHead className="text-right">Bear (–20%)</TableHead>
-                      <TableHead className="text-right">Base</TableHead>
-                      <TableHead className="text-right text-pink-600">Bull (+20%)</TableHead>
+                      <TableHead>{t('overview_metric')}</TableHead>
+                      <TableHead className="text-right">{t('overview_bear')}</TableHead>
+                      <TableHead className="text-right">{t('overview_base')}</TableHead>
+                      <TableHead className="text-right text-pink-600">{t('overview_bull')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
+                    {([
+                      ['pricing_revenue', 'totalRevenueSgd'],
+                      ['overview_cost',   'totalCostSgd'],
+                      ['overview_gross_profit', 'grossProfitSgd'],
+                    ] as const).map(([labelKey, field]) => (
+                      <TableRow key={labelKey}>
+                        <TableCell>{t(labelKey)}</TableCell>
+                        <TableCell className="text-right">S${(bullBear.bear as any)[field].toFixed(2)}</TableCell>
+                        <TableCell className="text-right">S${(bullBear.base as any)[field].toFixed(2)}</TableCell>
+                        <TableCell className="text-right text-pink-600">S${(bullBear.bull as any)[field].toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
                     <TableRow>
-                      <TableCell>Revenue</TableCell>
-                      <TableCell className="text-right">S${bullBear.bear.totalRevenueSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">S${bullBear.base.totalRevenueSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-pink-600">S${bullBear.bull.totalRevenueSgd.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Cost</TableCell>
-                      <TableCell className="text-right">S${bullBear.bear.totalCostSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">S${bullBear.base.totalCostSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-pink-600">S${bullBear.bull.totalCostSgd.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Gross Profit</TableCell>
-                      <TableCell className="text-right">S${bullBear.bear.grossProfitSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">S${bullBear.base.grossProfitSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-pink-600">S${bullBear.bull.grossProfitSgd.toFixed(2)}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Margin %</TableCell>
+                      <TableCell>{t('overview_margin')}</TableCell>
                       <TableCell className="text-right">{bullBear.bear.grossMarginPct.toFixed(1)}%</TableCell>
                       <TableCell className="text-right">{bullBear.base.grossMarginPct.toFixed(1)}%</TableCell>
                       <TableCell className="text-right text-pink-600">{bullBear.bull.grossMarginPct.toFixed(1)}%</TableCell>

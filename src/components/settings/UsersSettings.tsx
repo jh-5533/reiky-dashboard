@@ -2,25 +2,16 @@
 
 import { useState } from 'react'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
@@ -34,17 +25,15 @@ export function UsersSettings({ profiles: initialProfiles }: Props) {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   async function updateRole(userId: string, role: 'admin' | 'staff') {
     const supabase = createClient()
     await supabase.from('profiles').update({ role }).eq('id', userId)
-    setProfiles((prev) =>
-      prev.map((p) => (p.id === userId ? { ...p, role } : p))
-    )
+    setProfiles((prev) => prev.map((p) => (p.id === userId ? { ...p, role } : p)))
   }
 
   async function deactivate(userId: string) {
-    // In practice, you'd disable the auth user. Here we just reflect it.
     const supabase = createClient()
     await supabase.auth.admin?.deleteUser(userId)
     setProfiles((prev) => prev.filter((p) => p.id !== userId))
@@ -56,9 +45,7 @@ export function UsersSettings({ profiles: initialProfiles }: Props) {
     setInviteMsg(null)
     try {
       const supabase = createClient()
-      const { error } = await supabase.auth.admin?.inviteUserByEmail(
-        inviteEmail
-      ) ?? {}
+      const { error } = await supabase.auth.admin?.inviteUserByEmail(inviteEmail) ?? {}
       if (error) throw error
       setInviteMsg(`Invitation sent to ${inviteEmail}`)
       setInviteEmail('')
@@ -71,34 +58,27 @@ export function UsersSettings({ profiles: initialProfiles }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* User table */}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Email</TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="w-24">Actions</TableHead>
+            <TableHead>{t('settings_col_email')}</TableHead>
+            <TableHead>{t('settings_col_name')}</TableHead>
+            <TableHead>{t('settings_col_role')}</TableHead>
+            <TableHead>{t('settings_col_joined')}</TableHead>
+            <TableHead className="w-24">{t('settings_col_actions')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {profiles.map((profile) => (
             <TableRow key={profile.id}>
               <TableCell className="text-sm">{profile.email}</TableCell>
-              <TableCell className="text-sm">
-                {profile.full_name ?? '—'}
-              </TableCell>
+              <TableCell className="text-sm">{profile.full_name ?? '—'}</TableCell>
               <TableCell>
                 <Select
                   value={profile.role}
-                  onValueChange={(v) =>
-                    updateRole(profile.id, v as 'admin' | 'staff')
-                  }
+                  onValueChange={(v) => updateRole(profile.id, v as 'admin' | 'staff')}
                 >
-                  <SelectTrigger className="h-8 w-24">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="staff">Staff</SelectItem>
@@ -106,53 +86,34 @@ export function UsersSettings({ profiles: initialProfiles }: Props) {
                 </Select>
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {new Date(profile.created_at).toLocaleDateString('en-SG', {
-                  month: 'short',
-                  year: 'numeric',
-                })}
+                {new Date(profile.created_at).toLocaleDateString('en-SG', { month: 'short', year: 'numeric' })}
               </TableCell>
               <TableCell>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive h-8"
-                  onClick={() => deactivate(profile.id)}
-                >
-                  Deactivate
+                <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive h-8" onClick={() => deactivate(profile.id)}>
+                  {t('settings_deactivate')}
                 </Button>
               </TableCell>
             </TableRow>
           ))}
           {profiles.length === 0 && (
             <TableRow>
-              <TableCell
-                colSpan={5}
-                className="text-center text-muted-foreground py-4"
-              >
-                No users found.
+              <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                {t('settings_no_users')}
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
 
-      {/* Invite */}
       <div className="space-y-2">
-        <Label>Invite User</Label>
+        <Label>{t('settings_invite')}</Label>
         <div className="flex gap-2 max-w-sm">
-          <Input
-            type="email"
-            placeholder="staff@reiky.sg"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-          />
+          <Input type="email" placeholder={t('settings_invite_ph')} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
           <Button onClick={handleInvite} disabled={inviting} size="sm">
-            {inviting ? 'Sending…' : 'Invite'}
+            {inviting ? t('settings_inviting') : t('settings_invite_btn')}
           </Button>
         </div>
-        {inviteMsg && (
-          <p className="text-xs text-muted-foreground">{inviteMsg}</p>
-        )}
+        {inviteMsg && <p className="text-xs text-muted-foreground">{inviteMsg}</p>}
       </div>
     </div>
   )

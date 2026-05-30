@@ -9,26 +9,16 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { Copy, Check, Link2, Plus } from 'lucide-react'
 
-interface ProductOption {
-  id: string
-  name: string
-}
+interface ProductOption { id: string; name: string }
 
 const schema = z.object({
   product_type: z.enum(['crystal', 'service']),
@@ -42,12 +32,9 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-interface CopyButtonProps {
-  url: string
-}
-
-function CopyButton({ url }: CopyButtonProps) {
+function CopyButton({ url }: { url: string }) {
   const [copied, setCopied] = useState(false)
+  const { t } = useLanguage()
 
   async function handleCopy() {
     await navigator.clipboard.writeText(url)
@@ -58,18 +45,15 @@ function CopyButton({ url }: CopyButtonProps) {
   return (
     <Button size="sm" variant="outline" onClick={handleCopy}>
       {copied ? (
-        <><Check size={12} className="mr-1 text-pink-600" />Copied</>
+        <><Check size={12} className="mr-1 text-pink-600" />{t('secret_links_copied')}</>
       ) : (
-        <><Copy size={12} className="mr-1" />Copy</>
+        <><Copy size={12} className="mr-1" />{t('secret_links_copy_btn')}</>
       )}
     </Button>
   )
 }
 
-interface Props {
-  mode: 'button' | 'copy'
-  url?: string
-}
+interface Props { mode: 'button' | 'copy'; url?: string }
 
 export function SecretLinksClient({ mode, url }: Props) {
   const router = useRouter()
@@ -79,16 +63,11 @@ export function SecretLinksClient({ mode, url }: Props) {
   const [generating, setGenerating] = useState(false)
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const { t } = useLanguage()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      product_type: 'crystal',
-      label: '',
-      custom_price: '',
-      expires_at: '',
-      max_uses: '',
-    },
+    defaultValues: { product_type: 'crystal', label: '', custom_price: '', expires_at: '', max_uses: '' },
   })
 
   const productType = form.watch('product_type')
@@ -121,14 +100,9 @@ export function SecretLinksClient({ mode, url }: Props) {
       }
       const { data, error } = await supabase.from('secret_links').insert(linkData).select('token').single()
       if (error) throw error
-      const fullUrl = `https://reiky-website.vercel.app/crystals/product.html?secret=${(data as { token: string }).token}`
-      setGeneratedUrl(fullUrl)
+      setGeneratedUrl(`https://reiky-website.vercel.app/crystals/product.html?secret=${(data as { token: string }).token}`)
       router.refresh()
-    } catch {
-      // ignore
-    } finally {
-      setGenerating(false)
-    }
+    } catch { /* ignore */ } finally { setGenerating(false) }
   }
 
   async function copyGenerated() {
@@ -141,65 +115,54 @@ export function SecretLinksClient({ mode, url }: Props) {
   if (mode === 'copy' && url) return <CopyButton url={url} />
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        setOpen(v)
-        if (!v) { setGeneratedUrl(null); form.reset() }
-      }}
-    >
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setGeneratedUrl(null); form.reset() } }}>
       <DialogTrigger className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/80 transition-colors">
         <Plus size={14} />
-        Generate Link
+        {t('secret_links_generate')}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Generate Secret Link</DialogTitle>
+          <DialogTitle>{t('secret_links_generate_title')}</DialogTitle>
         </DialogHeader>
 
         {generatedUrl ? (
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Your secret link has been created:</p>
+            <p className="text-sm text-muted-foreground">{t('secret_links_created')}</p>
             <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
               <Link2 size={14} className="text-muted-foreground shrink-0" />
               <span className="text-xs font-mono truncate flex-1">{generatedUrl}</span>
             </div>
             <Button className="w-full" onClick={copyGenerated}>
               {copied ? (
-                <><Check size={14} className="mr-2 text-pink-600" />Copied!</>
+                <><Check size={14} className="mr-2 text-pink-600" />{t('secret_links_copied')}</>
               ) : (
-                <><Copy size={14} className="mr-2" />Copy to Clipboard</>
+                <><Copy size={14} className="mr-2" />{t('secret_links_copy')}</>
               )}
             </Button>
             <Button variant="outline" className="w-full" onClick={() => { setGeneratedUrl(null); form.reset() }}>
-              Generate Another
+              {t('secret_links_another')}
             </Button>
           </div>
         ) : (
           <form onSubmit={form.handleSubmit(handleGenerate)} className="space-y-4">
             <div className="space-y-2">
-              <Label>Product Type</Label>
-              <Select
-                defaultValue="crystal"
-                onValueChange={(v) => form.setValue('product_type', String(v) as 'crystal' | 'service')}
-              >
+              <Label>{t('secret_links_product_type')}</Label>
+              <Select defaultValue="crystal" onValueChange={(v) => form.setValue('product_type', String(v) as 'crystal' | 'service')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="crystal">Crystal</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="crystal">{t('secret_links_crystal')}</SelectItem>
+                  <SelectItem value="service">{t('secret_links_service')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {productType === 'crystal' && (
               <div className="space-y-2">
-                <Label>Crystal</Label>
+                <Label>{t('secret_links_crystal')}</Label>
                 <Select onValueChange={(v) => form.setValue('crystal_id', String(v) || undefined)}>
-                  <SelectTrigger><SelectValue placeholder="Select crystal…" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('secret_links_select_crystal')} /></SelectTrigger>
                   <SelectContent>
-                    {crystals.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
+                    {crystals.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -207,41 +170,39 @@ export function SecretLinksClient({ mode, url }: Props) {
 
             {productType === 'service' && (
               <div className="space-y-2">
-                <Label>Service</Label>
+                <Label>{t('secret_links_service')}</Label>
                 <Select onValueChange={(v) => form.setValue('service_id', String(v) || undefined)}>
-                  <SelectTrigger><SelectValue placeholder="Select service…" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('secret_links_select_service')} /></SelectTrigger>
                   <SelectContent>
-                    {services.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
+                    {services.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label>Label (internal note)</Label>
-              <Input {...form.register('label')} placeholder="e.g. VIP customer discount" />
+              <Label>{t('secret_links_label_note')}</Label>
+              <Input {...form.register('label')} placeholder={t('secret_links_label_ph')} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Custom Price (SGD)</Label>
-                <Input {...form.register('custom_price')} type="number" step="0.01" placeholder="Optional" />
+                <Label>{t('secret_links_custom_price')}</Label>
+                <Input {...form.register('custom_price')} type="number" step="0.01" placeholder={t('secret_links_optional')} />
               </div>
               <div className="space-y-2">
-                <Label>Max Uses</Label>
-                <Input {...form.register('max_uses')} type="number" placeholder="Unlimited" />
+                <Label>{t('secret_links_max_uses')}</Label>
+                <Input {...form.register('max_uses')} type="number" placeholder={t('secret_links_unlimited')} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Expiry Date</Label>
+              <Label>{t('secret_links_expiry')}</Label>
               <Input {...form.register('expires_at')} type="date" />
             </div>
 
             <Button type="submit" className="w-full" disabled={generating}>
-              {generating ? 'Generating…' : 'Create Link'}
+              {generating ? t('secret_links_creating') : t('secret_links_create')}
             </Button>
           </form>
         )}

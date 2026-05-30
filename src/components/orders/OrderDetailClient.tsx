@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
+import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
 
 type Order = Database['public']['Tables']['orders']['Row']
@@ -27,6 +28,7 @@ export function OrderDetailClient({ order }: Props) {
   const [notes, setNotes] = useState(order.notes ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const { t } = useLanguage()
 
   async function handleSave() {
     setSaving(true)
@@ -48,51 +50,51 @@ export function OrderDetailClient({ order }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Status &amp; Notes</CardTitle>
+        <CardTitle>{t('orders_detail_status_notes')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Order Status</Label>
+            <Label>{t('orders_detail_order_status')}</Label>
             <Select value={status} onValueChange={(v) => setStatus(v ?? status)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="shipped">Shipped</SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="pending">{t('orders_status_pending')}</SelectItem>
+                <SelectItem value="confirmed">{t('orders_status_confirmed')}</SelectItem>
+                <SelectItem value="processing">{t('orders_status_processing')}</SelectItem>
+                <SelectItem value="shipped">{t('orders_status_shipped')}</SelectItem>
+                <SelectItem value="delivered">{t('orders_status_delivered')}</SelectItem>
+                <SelectItem value="cancelled">{t('orders_status_cancelled')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Payment Status</Label>
+            <Label>{t('orders_detail_payment_status')}</Label>
             <Select value={paymentStatus} onValueChange={(v) => setPaymentStatus(v ?? paymentStatus)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="unpaid">Unpaid</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="refunded">Refunded</SelectItem>
+                <SelectItem value="unpaid">{t('orders_pay_unpaid')}</SelectItem>
+                <SelectItem value="paid">{t('orders_pay_paid')}</SelectItem>
+                <SelectItem value="partial">{t('orders_pay_partial')}</SelectItem>
+                <SelectItem value="refunded">{t('orders_pay_refunded')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Notes</Label>
+          <Label>{t('orders_detail_notes')}</Label>
           <Textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            placeholder="Internal notes…"
+            placeholder={t('orders_detail_notes_ph')}
           />
         </div>
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : saved ? 'Saved!' : 'Save Changes'}
+            {saving ? t('form_saving') : saved ? t('orders_detail_saved') : t('orders_detail_save')}
           </Button>
         </div>
       </CardContent>

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table'
 import { calcBullBear } from '@/lib/pricing'
 import { RevenueChart } from '@/components/overview/RevenueChart'
+import { getLang, t } from '@/lib/i18n/server'
 import type { Database } from '@/types/database'
 
 type Crystal = Database['public']['Tables']['crystals']['Row']
@@ -76,9 +77,10 @@ async function getCrystalsForAnalysis(): Promise<Crystal[]> {
 }
 
 export default async function OverviewPage() {
-  const [stats, crystals] = await Promise.all([
+  const [stats, crystals, lang] = await Promise.all([
     getStats(),
     getCrystalsForAnalysis(),
+    getLang(),
   ])
 
   const bullBearItems = crystals
@@ -99,33 +101,33 @@ export default async function OverviewPage() {
 
   const statCards = [
     {
-      title: 'Orders Today',
+      title: t(lang, 'overview_orders_today'),
       value: stats.ordersToday.toString(),
-      description: 'New orders since midnight',
+      description: t(lang, 'overview_orders_desc'),
     },
     {
-      title: 'Revenue This Month',
+      title: t(lang, 'overview_revenue_month'),
       value: `S$${stats.revenueMonth.toFixed(2)}`,
-      description: 'Total SGD collected',
+      description: t(lang, 'overview_revenue_desc'),
     },
     {
-      title: 'Active Products',
+      title: t(lang, 'overview_active_products'),
       value: stats.activeProducts.toString(),
-      description: 'Published crystals',
+      description: t(lang, 'overview_products_desc'),
     },
     {
-      title: 'Active Customers',
+      title: t(lang, 'overview_active_customers'),
       value: stats.activeCustomers.toString(),
-      description: 'Total customers in CRM',
+      description: t(lang, 'overview_customers_desc'),
     },
   ]
 
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t(lang, 'overview_title')}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Welcome back. Here&apos;s what&apos;s happening with Reiky SG.
+          {t(lang, 'overview_welcome')}
         </p>
       </div>
 
@@ -151,7 +153,7 @@ export default async function OverviewPage() {
       {/* Revenue Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Revenue (SGD)</CardTitle>
+          <CardTitle>{t(lang, 'overview_monthly_revenue')}</CardTitle>
         </CardHeader>
         <CardContent>
           <RevenueChart />
@@ -161,10 +163,9 @@ export default async function OverviewPage() {
       {/* Bull / Bear Analysis */}
       <Card>
         <CardHeader>
-          <CardTitle>Bull / Bear Profit Analysis</CardTitle>
+          <CardTitle>{t(lang, 'overview_bull_bear')}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Based on {bullBearItems.length} published products. Bear = 80% of
-            set markups, Base = 100%, Bull = 120%.
+            {t(lang, 'overview_bull_bear_desc_prefix')} {bullBearItems.length} {t(lang, 'overview_bull_bear_desc_suffix')}
           </p>
         </CardHeader>
         <CardContent>
@@ -172,17 +173,17 @@ export default async function OverviewPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Metric</TableHead>
-                  <TableHead className="text-right">Bear (–20%)</TableHead>
-                  <TableHead className="text-right">Base</TableHead>
+                  <TableHead>{t(lang, 'overview_metric')}</TableHead>
+                  <TableHead className="text-right">{t(lang, 'overview_bear')}</TableHead>
+                  <TableHead className="text-right">{t(lang, 'overview_base')}</TableHead>
                   <TableHead className="text-right text-pink-600">
-                    Bull (+20%)
+                    {t(lang, 'overview_bull')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="font-medium">Revenue</TableCell>
+                  <TableCell className="font-medium">{t(lang, 'overview_revenue')}</TableCell>
                   <TableCell className="text-right">
                     S${analysis.bear.totalRevenueSgd.toFixed(2)}
                   </TableCell>
@@ -194,7 +195,7 @@ export default async function OverviewPage() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Cost</TableCell>
+                  <TableCell className="font-medium">{t(lang, 'overview_cost')}</TableCell>
                   <TableCell className="text-right">
                     S${analysis.bear.totalCostSgd.toFixed(2)}
                   </TableCell>
@@ -206,7 +207,7 @@ export default async function OverviewPage() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Gross Profit</TableCell>
+                  <TableCell className="font-medium">{t(lang, 'overview_gross_profit')}</TableCell>
                   <TableCell className="text-right">
                     S${analysis.bear.grossProfitSgd.toFixed(2)}
                   </TableCell>
@@ -218,7 +219,7 @@ export default async function OverviewPage() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="font-medium">Margin %</TableCell>
+                  <TableCell className="font-medium">{t(lang, 'overview_margin')}</TableCell>
                   <TableCell className="text-right">
                     {analysis.bear.grossMarginPct.toFixed(1)}%
                   </TableCell>
@@ -233,8 +234,7 @@ export default async function OverviewPage() {
             </Table>
           ) : (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              No published products with cost data found. Add products to see
-              analysis.
+              {t(lang, 'overview_no_products')}
             </p>
           )}
         </CardContent>

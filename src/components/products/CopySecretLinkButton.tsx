@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Copy, Check } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Props {
   url: string
@@ -10,6 +11,7 @@ interface Props {
 
 export function CopySecretLinkButton({ url }: Props) {
   const [copied, setCopied] = useState(false)
+  const { t } = useLanguage()
 
   async function handleCopy() {
     await navigator.clipboard.writeText(url)
@@ -22,12 +24,12 @@ export function CopySecretLinkButton({ url }: Props) {
       {copied ? (
         <>
           <Check size={14} className="mr-1 text-pink-600" />
-          Copied!
+          {t('copy_link_copied')}
         </>
       ) : (
         <>
           <Copy size={14} className="mr-1" />
-          Copy Secret Link
+          {t('copy_link_btn')}
         </>
       )}
     </Button>

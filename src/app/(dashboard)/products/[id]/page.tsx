@@ -5,6 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import { ProductForm } from '@/components/products/ProductForm'
 import { DeleteProductButton } from '@/components/products/DeleteProductButton'
 import { CopySecretLinkButton } from '@/components/products/CopySecretLinkButton'
+import { getLang, t } from '@/lib/i18n/server'
 import type { UploadedImage } from '@/components/products/ImageUploader'
 import type { Database } from '@/types/database'
 
@@ -17,7 +18,7 @@ export default async function EditProductPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const { id } = await rawParams
+  const [{ id }, lang] = await Promise.all([rawParams, getLang()])
   const supabase = await createClient()
 
   const crystalRes = await supabase.from('crystals').select('*').eq('id', id).single()
@@ -50,11 +51,11 @@ export default async function EditProductPage({
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft size={16} />
-            Products
+            {t(lang, 'common_back_products')}
           </Link>
           <div>
             <h1 className="text-2xl font-bold">{crystal.name}</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">Edit product details.</p>
+            <p className="text-muted-foreground text-sm mt-0.5">{t(lang, 'products_edit_subtitle')}</p>
           </div>
         </div>
 

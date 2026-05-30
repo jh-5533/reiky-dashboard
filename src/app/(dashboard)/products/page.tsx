@@ -14,6 +14,7 @@ import { ProductStatusBadge } from '@/components/products/ProductStatusBadge'
 import { ProductFilters } from '@/components/products/ProductFilters'
 import { calcPrice } from '@/lib/pricing'
 import { Edit } from 'lucide-react'
+import { getLang, t } from '@/lib/i18n/server'
 import type { Database } from '@/types/database'
 
 type Crystal = Database['public']['Tables']['crystals']['Row']
@@ -26,7 +27,7 @@ interface SearchParams {
   category?: string
 }
 
-async function ProductList({ searchParams }: { searchParams: SearchParams }) {
+async function ProductList({ searchParams, lang }: { searchParams: SearchParams; lang: 'en' | 'zh' }) {
   let crystals: Crystal[] = []
 
   try {
@@ -55,14 +56,14 @@ async function ProductList({ searchParams }: { searchParams: SearchParams }) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-12">Img</TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Cost (MOP)</TableHead>
-          <TableHead className="text-right">Markup %</TableHead>
-          <TableHead className="text-right">Final SGD</TableHead>
-          <TableHead className="w-20">Actions</TableHead>
+          <TableHead className="w-12">{t(lang, 'products_col_img')}</TableHead>
+          <TableHead>{t(lang, 'products_col_name')}</TableHead>
+          <TableHead>{t(lang, 'products_col_category')}</TableHead>
+          <TableHead>{t(lang, 'products_col_status')}</TableHead>
+          <TableHead className="text-right">{t(lang, 'products_col_cost')}</TableHead>
+          <TableHead className="text-right">{t(lang, 'products_col_markup')}</TableHead>
+          <TableHead className="text-right">{t(lang, 'products_col_final')}</TableHead>
+          <TableHead className="w-20">{t(lang, 'products_col_actions')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -97,7 +98,7 @@ async function ProductList({ searchParams }: { searchParams: SearchParams }) {
                   className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium hover:bg-muted transition-colors"
                 >
                   <Edit size={12} />
-                  Edit
+                  {t(lang, 'products_edit')}
                 </Link>
               </TableCell>
             </TableRow>
@@ -106,7 +107,7 @@ async function ProductList({ searchParams }: { searchParams: SearchParams }) {
         {crystals.length === 0 && (
           <TableRow>
             <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-              No products found. Create your first product.
+              {t(lang, 'products_empty')}
             </TableCell>
           </TableRow>
         )}
@@ -120,33 +121,33 @@ export default async function ProductsPage({
 }: {
   searchParams: Promise<SearchParams>
 }) {
-  const searchParams = await rawSearchParams
+  const [searchParams, lang] = await Promise.all([rawSearchParams, getLang()])
 
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Products</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your crystal inventory.</p>
+          <h1 className="text-2xl font-bold">{t(lang, 'products_title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t(lang, 'products_subtitle')}</p>
         </div>
         <Link
           href="/products/new"
           className="inline-flex items-center rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/80 transition-colors"
         >
-          New Product
+          {t(lang, 'products_new')}
         </Link>
       </div>
 
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">All Products</CardTitle>
+          <CardTitle className="text-base">{t(lang, 'products_all')}</CardTitle>
           <Suspense>
             <ProductFilters />
           </Suspense>
         </CardHeader>
         <CardContent className="p-0">
-          <Suspense fallback={<div className="py-12 text-center text-muted-foreground">Loading products…</div>}>
-            <ProductList searchParams={searchParams} />
+          <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t(lang, 'products_loading')}</div>}>
+            <ProductList searchParams={searchParams} lang={lang} />
           </Suspense>
         </CardContent>
       </Card>
