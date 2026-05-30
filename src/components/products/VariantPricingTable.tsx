@@ -6,16 +6,14 @@ import { Button } from '@/components/ui/button'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { calcPrice } from '@/lib/pricing'
 import { Trash2, Plus } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 
 interface Props {
   rate: number
-  markupPct: number
 }
 
-export function VariantPricingTable({ rate, markupPct }: Props) {
+export function VariantPricingTable({ rate }: Props) {
   const { control, register, watch } = useFormContext()
   const { fields, append, remove } = useFieldArray({ control, name: 'variants' })
   const { t } = useLanguage()
@@ -24,9 +22,11 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
     bead_size_mm: string
     cost_price_mop: string
     reiky_cost_mop: string
+    sell_price_sgd: string
   }>
 
-  const config = { mopSgdRate: rate, ccFeePct: 3.4, gstPct: 9 }
+  const CC_FEE = 0.034
+  const GST = 0.09
 
   return (
     <div className="space-y-3">
@@ -34,74 +34,176 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24 whitespace-nowrap">{t('vpt_size')}</TableHead>
+              {/* Col 1 */}
+              <TableHead className="w-20 whitespace-nowrap">{t('vpt_size')}</TableHead>
+
+              {/* Col 2 */}
               <TableHead className="whitespace-nowrap">
                 {t('vpt_supplier_cost')}
                 <br />
                 <span className="text-xs font-normal text-muted-foreground">{t('vpt_mop_customs')}</span>
               </TableHead>
+
+              {/* Col 3 */}
               <TableHead className="text-center whitespace-nowrap">
                 {t('vpt_import_gst')}
                 <br />
-                <span className="text-xs font-normal text-muted-foreground">MOP / SGD</span>
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_customs_total')}</span>
               </TableHead>
+
+              {/* Col 4 */}
               <TableHead className="whitespace-nowrap">
                 {t('vpt_reiky_cost')}
                 <br />
                 <span className="text-xs font-normal text-muted-foreground">{t('vpt_macau_price')}</span>
               </TableHead>
-              <TableHead className="text-center whitespace-nowrap">
-                {t('vpt_final_price')}
+
+              {/* Col 5 */}
+              <TableHead className="text-right whitespace-nowrap">
+                {t('vpt_sg_sell_price')}
                 <br />
-                <span className="text-xs font-normal text-muted-foreground">{t('vpt_sgd_margin')}</span>
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_pre_gst')}</span>
               </TableHead>
+
+              {/* Col 6 */}
+              <TableHead className="text-right whitespace-nowrap">
+                {t('vpt_markup_pct')}
+                <br />
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_vs_reiky')}</span>
+              </TableHead>
+
+              {/* Col 7 */}
+              <TableHead className="text-right whitespace-nowrap">
+                {t('vpt_with_gst')}
+                <br />
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_customer_pays')}</span>
+              </TableHead>
+
+              {/* Col 8 */}
+              <TableHead className="text-right whitespace-nowrap">
+                {t('vpt_net_after_cc')}
+                <br />
+                <span className="text-xs font-normal text-muted-foreground">{t('vpt_after_cc')}</span>
+              </TableHead>
+
+              {/* Col 9 */}
+              <TableHead className="text-right whitespace-nowrap text-emerald-700">
+                {t('kyn_profit')}
+                <br />
+                <span className="text-xs font-normal text-muted-foreground">sell − cost</span>
+              </TableHead>
+
               <TableHead className="w-10" />
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {fields.map((field, index) => {
               const supplierMop = parseFloat(variants?.[index]?.cost_price_mop ?? '0') || 0
-              const reikyMop   = parseFloat(variants?.[index]?.reiky_cost_mop  ?? '0') || 0
+              const reikyMop    = parseFloat(variants?.[index]?.reiky_cost_mop  ?? '0') || 0
+              const sellSgd     = parseFloat(variants?.[index]?.sell_price_sgd  ?? '0') || 0
 
-              const gstMop  = supplierMop > 0 ? supplierMop * 1.09 : null
-              const gstSgd  = gstMop != null  ? gstMop * rate : null
-              const reikySgd = reikyMop > 0   ? reikyMop * rate : null
-              const pricing  = reikyMop > 0   ? calcPrice(reikyMop, markupPct, config) : null
+              const supplierSgd   = supplierMop > 0 ? supplierMop * rate : null
+              const gstTotalMop   = supplierMop > 0 ? supplierMop * (1 + GST) : null
+              const gstTotalSgd   = gstTotalMop != null ? gstTotalMop * rate : null
+              const reikySgd      = reikyMop > 0 ? reikyMop * rate : null
+              const markupPct     = reikySgd && reikySgd > 0 && sellSgd > 0
+                ? ((sellSgd - reikySgd) / reikySgd) * 100
+                : null
+              const withGstSgd    = sellSgd > 0 ? sellSgd * (1 + GST) : null
+              const netAfterCcSgd = withGstSgd != null ? withGstSgd * (1 - CC_FEE) : null
+              const kynProfit     = reikySgd != null && sellSgd > 0 ? sellSgd - reikySgd : null
 
               return (
                 <TableRow key={field.id}>
+                  {/* Col 1: Size */}
                   <TableCell>
-                    <Input {...register(`variants.${index}.bead_size_mm`)} placeholder="e.g. 8" className="w-20" />
+                    <Input
+                      {...register(`variants.${index}.bead_size_mm`)}
+                      placeholder="8"
+                      className="w-16"
+                    />
                   </TableCell>
+
+                  {/* Col 2: Supplier Cost MOP */}
                   <TableCell>
-                    <Input {...register(`variants.${index}.cost_price_mop`)} type="number" step="0.01" placeholder="0.00" className="w-28" />
+                    <div className="space-y-1">
+                      <Input
+                        {...register(`variants.${index}.cost_price_mop`)}
+                        type="number" step="0.01" placeholder="0.00 MOP"
+                        className="w-28"
+                      />
+                      {supplierSgd != null && (
+                        <div className="text-xs text-muted-foreground pl-1">≈ S${supplierSgd.toFixed(2)}</div>
+                      )}
+                    </div>
                   </TableCell>
+
+                  {/* Col 3: Supplier + 9% GST */}
                   <TableCell className="text-center text-sm">
-                    {gstMop != null ? (
+                    {gstTotalMop != null ? (
                       <div>
-                        <div className="font-medium">{gstMop.toFixed(2)} MOP</div>
-                        <div className="text-xs text-muted-foreground">S${gstSgd!.toFixed(2)}</div>
+                        <div className="font-medium">{gstTotalMop.toFixed(2)} MOP</div>
+                        <div className="text-xs text-muted-foreground">S${gstTotalSgd!.toFixed(2)}</div>
                       </div>
                     ) : '—'}
                   </TableCell>
+
+                  {/* Col 4: Reiky Cost MOP */}
                   <TableCell>
                     <div className="space-y-1">
-                      <Input {...register(`variants.${index}.reiky_cost_mop`)} type="number" step="0.01" placeholder="0.00 MOP" className="w-28" />
+                      <Input
+                        {...register(`variants.${index}.reiky_cost_mop`)}
+                        type="number" step="0.01" placeholder="0.00 MOP"
+                        className="w-28"
+                      />
                       {reikySgd != null && (
                         <div className="text-xs text-muted-foreground pl-1">≈ S${reikySgd.toFixed(2)}</div>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
-                    {pricing ? (
-                      <div>
-                        <div className="font-medium text-sm">S${pricing.finalSgd.toFixed(2)}</div>
-                        <div className="text-xs text-pink-600 font-medium">
-                          {pricing.effectiveMarginPct.toFixed(1)} {t('vpt_margin')}
-                        </div>
-                      </div>
+
+                  {/* Col 5: SG Sell Price */}
+                  <TableCell className="text-right">
+                    <Input
+                      {...register(`variants.${index}.sell_price_sgd`)}
+                      type="number" step="0.01" placeholder="0.00"
+                      className="w-28 text-right ml-auto"
+                    />
+                  </TableCell>
+
+                  {/* Col 6: Markup % */}
+                  <TableCell className="text-right text-sm">
+                    {markupPct != null ? (
+                      <span className={`font-medium ${markupPct >= 0 ? 'text-blue-600' : 'text-destructive'}`}>
+                        {markupPct.toFixed(1)}%
+                      </span>
                     ) : '—'}
                   </TableCell>
+
+                  {/* Col 7: + 9% GST (customer pays) */}
+                  <TableCell className="text-right text-sm">
+                    {withGstSgd != null ? (
+                      <span className="font-medium">S${withGstSgd.toFixed(2)}</span>
+                    ) : '—'}
+                  </TableCell>
+
+                  {/* Col 8: Net after CC */}
+                  <TableCell className="text-right text-sm">
+                    {netAfterCcSgd != null ? (
+                      <span className="font-medium">S${netAfterCcSgd.toFixed(2)}</span>
+                    ) : '—'}
+                  </TableCell>
+
+                  {/* Col 9: Kyn Profit */}
+                  <TableCell className="text-right text-sm">
+                    {kynProfit != null ? (
+                      <span className={`font-medium ${kynProfit >= 0 ? 'text-emerald-600' : 'text-destructive'}`}>
+                        S${kynProfit.toFixed(2)}
+                      </span>
+                    ) : '—'}
+                  </TableCell>
+
                   <TableCell>
                     <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)}>
                       <Trash2 size={14} />
@@ -118,7 +220,7 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
         type="button"
         variant="outline"
         size="sm"
-        onClick={() => append({ bead_size_mm: '', cost_price_mop: '', reiky_cost_mop: '' })}
+        onClick={() => append({ bead_size_mm: '', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' })}
       >
         <Plus size={14} className="mr-1" />
         {t('vpt_add_size')}

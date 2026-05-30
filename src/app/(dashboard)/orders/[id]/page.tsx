@@ -94,7 +94,7 @@ export default async function OrderDetailPage({
 
       <Card>
         <CardHeader><CardTitle>{t(lang, 'orders_detail_items')}</CardTitle></CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>

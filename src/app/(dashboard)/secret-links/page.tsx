@@ -56,7 +56,7 @@ export default async function SecretLinksPage() {
         <CardHeader>
           <CardTitle className="text-base">{t(lang, 'secret_links_all')}</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>

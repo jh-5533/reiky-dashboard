@@ -271,6 +271,9 @@ alter table public.crystals
 alter table public.crystal_variants
   add column if not exists reiky_cost_mop numeric(10,2);
 
+alter table public.crystal_variants
+  add column if not exists sell_price_sgd numeric(10,2);
+
 alter table public.services
   add column if not exists website_url text;
 

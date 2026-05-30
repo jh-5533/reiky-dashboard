@@ -145,7 +145,7 @@ export default async function ProductsPage({
             <ProductFilters />
           </Suspense>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t(lang, 'products_loading')}</div>}>
             <ProductList searchParams={searchParams} lang={lang} />
           </Suspense>

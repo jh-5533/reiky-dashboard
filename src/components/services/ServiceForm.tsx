@@ -66,6 +66,13 @@ function marginPct(price: string, cost: string): string {
   return ((p - c) / p * 100).toFixed(1) + '%'
 }
 
+function kynProfitStr(price: string, cost: string): string {
+  const p = parseFloat(price)
+  const c = parseFloat(cost)
+  if (!p || !c) return '—'
+  return 'S$' + (p - c).toFixed(2)
+}
+
 interface Props {
   service?: Service
   initialImages?: UploadedImage[]
@@ -330,7 +337,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
           </div>
 
           {pricingType === 'single' && (
-            <div className="grid grid-cols-3 gap-4 items-end">
+            <div className="grid grid-cols-4 gap-4 items-end">
               <div className="space-y-2">
                 <Label>{t('svc_selling_price')}</Label>
                 <Input
@@ -351,6 +358,12 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                   {marginPct(watchedPrice, watchedCost)}
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>{t('kyn_profit')}</Label>
+                <div className="h-9 px-3 flex items-center rounded-md border bg-muted text-sm font-medium text-emerald-600">
+                  {kynProfitStr(watchedPrice, watchedCost)}
+                </div>
+              </div>
             </div>
           )}
 
@@ -364,6 +377,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                       <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_selling_price')}</th>
                       <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_your_cost')}</th>
                       <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_margin')}</th>
+                      <th className="text-left px-4 py-2.5 font-medium text-emerald-700">{t('kyn_profit')}</th>
                       <th className="text-left px-4 py-2.5 font-medium text-gray-700">{t('svc_tier_desc')}</th>
                       <th className="w-10" />
                     </tr>
@@ -398,6 +412,11 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                           <td className="px-4 py-2">
                             <span className="text-sm font-medium text-pink-600">
                               {marginPct(price, cost)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="text-sm font-medium text-emerald-600">
+                              {kynProfitStr(price, cost)}
                             </span>
                           </td>
                           <td className="px-4 py-2">

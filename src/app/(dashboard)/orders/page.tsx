@@ -140,7 +140,7 @@ export default async function OrdersPage({
             <OrderStatusFilter />
           </Suspense>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t(lang, 'orders_loading')}</div>}>
             <OrderList searchParams={searchParams} lang={lang} />
           </Suspense>

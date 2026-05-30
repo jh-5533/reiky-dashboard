@@ -103,10 +103,17 @@ export const dict = {
   vpt_supplier_cost:      { en: 'Supplier Cost',       zh: '供应商成本' },
   vpt_mop_customs:        { en: 'MOP — declare at customs', zh: 'MOP — 海关申报' },
   vpt_import_gst:         { en: '+ 9% Import GST',    zh: '+ 9% 进口消费税' },
+  vpt_customs_total:      { en: 'total incl. GST',     zh: '含税总额' },
   vpt_reiky_cost:         { en: 'Reiky Cost',          zh: 'Reiky 成本' },
-  vpt_macau_price:        { en: 'Macau shop price — MOP / SGD', zh: '澳门店价 — MOP / 新元' },
-  vpt_final_price:        { en: 'Final Price',         zh: '最终价格' },
-  vpt_sgd_margin:         { en: 'SGD / margin',        zh: '新元 / 利润率' },
+  vpt_macau_price:        { en: 'Macau price — MOP / SGD', zh: '澳门价 — MOP / 新元' },
+  vpt_sg_sell_price:      { en: 'SG Sell Price',       zh: '新加坡售价' },
+  vpt_pre_gst:            { en: 'pre-GST',             zh: '税前' },
+  vpt_markup_pct:         { en: 'Markup %',            zh: '加价 %' },
+  vpt_vs_reiky:           { en: 'vs Reiky cost',       zh: '对比 Reiky 成本' },
+  vpt_with_gst:           { en: '+ 9% GST',            zh: '+ 9% 消费税' },
+  vpt_customer_pays:      { en: 'customer pays',       zh: '客户支付' },
+  vpt_net_after_cc:       { en: 'Net after CC',        zh: '手续费后净额' },
+  vpt_after_cc:           { en: 'after 3.4%',          zh: '扣除 3.4% 后' },
   vpt_add_size:           { en: 'Add Size',            zh: '添加尺寸' },
   vpt_margin:             { en: '% margin',            zh: '% 利润率' },
 
@@ -344,6 +351,9 @@ export const dict = {
   // --- CopySecretLinkButton ---
   copy_link_btn:          { en: 'Copy Secret Link',    zh: '复制专属链接' },
   copy_link_copied:       { en: 'Copied!',             zh: '已复制！' },
+
+  // --- Kyn Profit ---
+  kyn_profit:             { en: 'Kyn Profit',          zh: 'Kyn 利润' },
 } as const
 
 export type DictKey = keyof typeof dict

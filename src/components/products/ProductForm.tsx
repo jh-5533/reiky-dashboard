@@ -19,12 +19,10 @@ import {
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { VariantPricingTable } from './VariantPricingTable'
-import { MarkupTableDisplay } from './MarkupTableDisplay'
 import { ImageUploader, type UploadedImage } from './ImageUploader'
 import { ProductPreview } from './ProductPreview'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createClient } from '@/lib/supabase/client'
-import { calcPrice } from '@/lib/pricing'
 import { Trash2, Plus } from 'lucide-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import type { Database } from '@/types/database'
@@ -42,6 +40,7 @@ const variantSchema = z.object({
   bead_size_mm: z.string(),
   cost_price_mop: z.string(),
   reiky_cost_mop: z.string(),
+  sell_price_sgd: z.string(),
 })
 
 const schema = z.object({
@@ -52,7 +51,6 @@ const schema = z.object({
   badge: z.string(),
   description: z.string(),
   status: z.enum(['draft', 'published', 'secret']),
-  markup_pct: z.number().min(0),
   review_count: z.number().min(0),
   rating: z.number().min(0).max(5),
   properties: z.object({
@@ -87,10 +85,10 @@ function slugify(str: string) {
 }
 
 const DEFAULT_VARIANTS = [
-  { bead_size_mm: '6',  cost_price_mop: '', reiky_cost_mop: '' },
-  { bead_size_mm: '8',  cost_price_mop: '', reiky_cost_mop: '' },
-  { bead_size_mm: '10', cost_price_mop: '', reiky_cost_mop: '' },
-  { bead_size_mm: '12', cost_price_mop: '', reiky_cost_mop: '' },
+  { bead_size_mm: '6',  cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '8',  cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '10', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
+  { bead_size_mm: '12', cost_price_mop: '', reiky_cost_mop: '', sell_price_sgd: '' },
 ]
 
 export function ProductForm({ crystal, variants = [], initialImages = [] }: Props) {
@@ -111,7 +109,6 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
       badge: crystal?.badge ?? '',
       description: crystal?.description ?? '',
       status: crystal?.status ?? 'draft',
-      markup_pct: crystal?.markup_pct ?? 60,
       review_count: crystal?.review_count ?? 0,
       rating: crystal?.rating ?? 5.0,
       properties: {
@@ -140,6 +137,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
               bead_size_mm: v.bead_size_mm.toString(),
               cost_price_mop: v.cost_price_mop.toString(),
               reiky_cost_mop: v.reiky_cost_mop?.toString() ?? '',
+              sell_price_sgd: v.sell_price_sgd?.toString() ?? '',
             }))
           : DEFAULT_VARIANTS,
     },
@@ -148,9 +146,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
   const { fields: highlightFields, append: addHighlight, remove: removeHighlight } =
     useFieldArray({ control: form.control, name: 'highlights' })
 
-  const watchedMarkup = form.watch('markup_pct')
   const watchedName = form.watch('name')
-  const watchedVariants = form.watch('variants')
 
   useEffect(() => {
     if (!crystal) {
@@ -165,10 +161,6 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
       .catch(() => {})
   }, [])
 
-  const firstVariantCost = parseFloat(
-    watchedVariants?.find((v) => v.cost_price_mop)?.cost_price_mop ?? '0'
-  ) || 0
-
   const handleSave = useCallback(
     async (values: FormValues) => {
       setSaving(true)
@@ -182,14 +174,18 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           ? parseFloat(firstCost.cost_price_mop)
           : null
 
-        const firstReikyVariant = values.variants.find((v) => v.reiky_cost_mop && v.cost_price_mop)
-        const display_price_sgd = firstReikyVariant
-          ? calcPrice(
-              parseFloat(firstReikyVariant.reiky_cost_mop),
-              values.markup_pct,
-              { mopSgdRate: rate, ccFeePct: 3.4, gstPct: 9 }
-            ).finalSgd
+        const firstSellVariant = values.variants.find((v) => v.sell_price_sgd && v.reiky_cost_mop)
+        const display_price_sgd = firstSellVariant
+          ? parseFloat(firstSellVariant.sell_price_sgd) * 1.09
           : null
+
+        const firstMarkupVariant = values.variants.find((v) => v.sell_price_sgd && v.reiky_cost_mop)
+        const markup_pct = firstMarkupVariant && rate > 0
+          ? Math.round(
+              (parseFloat(firstMarkupVariant.sell_price_sgd) - parseFloat(firstMarkupVariant.reiky_cost_mop) * rate)
+              / (parseFloat(firstMarkupVariant.reiky_cost_mop) * rate) * 100
+            )
+          : 0
 
         const crystalData = {
           name: values.name,
@@ -201,7 +197,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           highlights: values.highlights,
           properties: values.properties,
           cost_price_mop,
-          markup_pct: values.markup_pct,
+          markup_pct,
           status: values.status,
           secret_token: crystal?.secret_token ?? null,
           review_count: values.review_count,
@@ -243,6 +239,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
             bead_size_mm: parseFloat(v.bead_size_mm),
             cost_price_mop: parseFloat(v.cost_price_mop),
             reiky_cost_mop: v.reiky_cost_mop ? parseFloat(v.reiky_cost_mop) : null,
+            sell_price_sgd: v.sell_price_sgd ? parseFloat(v.sell_price_sgd) : null,
             sort_order: i,
             in_stock: true,
           }))
@@ -294,7 +291,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           </TabsList>
 
           <TabsContent value="preview">
-            <ProductPreview rate={rate} markupPct={Number(watchedMarkup)} />
+            <ProductPreview rate={rate} markupPct={0} />
           </TabsContent>
 
           <TabsContent value="edit" className="space-y-6">
@@ -403,14 +400,6 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>{t('form_description')}</Label>
-              <Textarea
-                {...form.register('description')}
-                rows={4}
-                placeholder="Describe this crystal…"
-              />
-            </div>
           </CardContent>
         </Card>
 
@@ -425,27 +414,7 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           </CardContent>
         </Card>
 
-        {/* C. Crystal Properties */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('form_crystal_props')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {propertyFields.map(([key, labelKey]) => (
-                <div key={key} className="space-y-2">
-                  <Label>{t(labelKey)}</Label>
-                  <Input
-                    {...form.register(`properties.${key}`)}
-                    placeholder={t(labelKey)}
-                  />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* D. Highlights */}
+        {/* C. Highlights */}
         <Card>
           <CardHeader>
             <CardTitle>{t('form_highlights')}</CardTitle>
@@ -490,39 +459,50 @@ export function ProductForm({ crystal, variants = [], initialImages = [] }: Prop
           </CardContent>
         </Card>
 
+        {/* D. Description */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('form_description')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              {...form.register('description')}
+              rows={4}
+              placeholder="Describe this crystal…"
+            />
+          </CardContent>
+        </Card>
+
+        {/* E. Crystal Properties */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('form_crystal_props')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              {propertyFields.map(([key, labelKey]) => (
+                <div key={key} className="space-y-2">
+                  <Label>{t(labelKey)}</Label>
+                  <Input
+                    {...form.register(`properties.${key}`)}
+                    placeholder={t(labelKey)}
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* E. Pricing by MM size */}
         <Card>
           <CardHeader>
             <CardTitle>{t('form_pricing')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="space-y-2">
-                <Label>{t('form_markup_pct')}</Label>
-                <Input
-                  {...form.register('markup_pct')}
-                  type="number"
-                  step="1"
-                  className="w-28"
-                />
-              </div>
-              <div className="text-sm text-muted-foreground pt-6">
-                Rate: 1 MOP = {rate} SGD
-              </div>
-            </div>
-
-            <VariantPricingTable rate={rate} markupPct={Number(watchedMarkup)} />
-
-            {firstVariantCost > 0 && (
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-2">{t('form_markup_ref_table')}</p>
-                <MarkupTableDisplay
-                  costMop={firstVariantCost}
-                  config={{ mopSgdRate: rate, ccFeePct: 3.4, gstPct: 9 }}
-                  currentMarkup={Number(watchedMarkup)}
-                />
-              </div>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Rate: 1 MOP = {rate} SGD
+            </p>
+            <VariantPricingTable rate={rate} />
           </CardContent>
         </Card>
 

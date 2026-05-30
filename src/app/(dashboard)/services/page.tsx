@@ -66,7 +66,7 @@ export default async function ServicesPage() {
         <CardHeader>
           <CardTitle className="text-base">{t(lang, 'services_all')}</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>

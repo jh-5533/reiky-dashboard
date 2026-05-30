@@ -104,7 +104,7 @@ export default async function CustomersPage({
           <CardTitle className="text-base">{t(lang, 'customers_all')}</CardTitle>
           <Suspense><CustomerSearch /></Suspense>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent>
           <Suspense fallback={<div className="py-12 text-center text-muted-foreground">{t(lang, 'customers_loading')}</div>}>
             <CustomerList searchParams={searchParams} lang={lang} />
           </Suspense>

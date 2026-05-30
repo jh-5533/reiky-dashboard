@@ -153,7 +153,7 @@ export default function PricingPage() {
               <CardHeader>
                 <CardTitle className="text-base">{t('pricing_markup_table')}</CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
+              <CardContent>
                 <div className="max-h-80 overflow-y-auto">
                   <Table>
                     <TableHeader>
