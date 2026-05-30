@@ -21,7 +21,7 @@ export function CopySecretLinkButton({ url }: Props) {
     <Button variant="outline" size="sm" onClick={handleCopy}>
       {copied ? (
         <>
-          <Check size={14} className="mr-1 text-emerald-600" />
+          <Check size={14} className="mr-1 text-pink-600" />
           Copied!
         </>
       ) : (

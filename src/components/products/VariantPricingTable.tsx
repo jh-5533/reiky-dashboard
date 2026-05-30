@@ -126,7 +126,7 @@ export function VariantPricingTable({ rate, markupPct }: Props) {
                     {pricing ? (
                       <div>
                         <div className="font-medium text-sm">S${pricing.finalSgd.toFixed(2)}</div>
-                        <div className="text-xs text-emerald-600 font-medium">
+                        <div className="text-xs text-pink-600 font-medium">
                           {pricing.effectiveMarginPct.toFixed(1)}% margin
                         </div>
                       </div>

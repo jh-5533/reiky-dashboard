@@ -260,7 +260,7 @@ export default function PricingPage() {
                       <TableHead>Metric</TableHead>
                       <TableHead className="text-right">Bear (–20%)</TableHead>
                       <TableHead className="text-right">Base</TableHead>
-                      <TableHead className="text-right text-emerald-600">Bull (+20%)</TableHead>
+                      <TableHead className="text-right text-pink-600">Bull (+20%)</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -268,25 +268,25 @@ export default function PricingPage() {
                       <TableCell>Revenue</TableCell>
                       <TableCell className="text-right">S${bullBear.bear.totalRevenueSgd.toFixed(2)}</TableCell>
                       <TableCell className="text-right">S${bullBear.base.totalRevenueSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-emerald-600">S${bullBear.bull.totalRevenueSgd.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-pink-600">S${bullBear.bull.totalRevenueSgd.toFixed(2)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Cost</TableCell>
                       <TableCell className="text-right">S${bullBear.bear.totalCostSgd.toFixed(2)}</TableCell>
                       <TableCell className="text-right">S${bullBear.base.totalCostSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-emerald-600">S${bullBear.bull.totalCostSgd.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-pink-600">S${bullBear.bull.totalCostSgd.toFixed(2)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Gross Profit</TableCell>
                       <TableCell className="text-right">S${bullBear.bear.grossProfitSgd.toFixed(2)}</TableCell>
                       <TableCell className="text-right">S${bullBear.base.grossProfitSgd.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-emerald-600">S${bullBear.bull.grossProfitSgd.toFixed(2)}</TableCell>
+                      <TableCell className="text-right text-pink-600">S${bullBear.bull.grossProfitSgd.toFixed(2)}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Margin %</TableCell>
                       <TableCell className="text-right">{bullBear.bear.grossMarginPct.toFixed(1)}%</TableCell>
                       <TableCell className="text-right">{bullBear.base.grossMarginPct.toFixed(1)}%</TableCell>
-                      <TableCell className="text-right text-emerald-600">{bullBear.bull.grossMarginPct.toFixed(1)}%</TableCell>
+                      <TableCell className="text-right text-pink-600">{bullBear.bull.grossMarginPct.toFixed(1)}%</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

@@ -175,7 +175,7 @@ export default async function OverviewPage() {
                   <TableHead>Metric</TableHead>
                   <TableHead className="text-right">Bear (–20%)</TableHead>
                   <TableHead className="text-right">Base</TableHead>
-                  <TableHead className="text-right text-emerald-600">
+                  <TableHead className="text-right text-pink-600">
                     Bull (+20%)
                   </TableHead>
                 </TableRow>
@@ -189,7 +189,7 @@ export default async function OverviewPage() {
                   <TableCell className="text-right">
                     S${analysis.base.totalRevenueSgd.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-emerald-600">
+                  <TableCell className="text-right text-pink-600">
                     S${analysis.bull.totalRevenueSgd.toFixed(2)}
                   </TableCell>
                 </TableRow>
@@ -201,7 +201,7 @@ export default async function OverviewPage() {
                   <TableCell className="text-right">
                     S${analysis.base.totalCostSgd.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-emerald-600">
+                  <TableCell className="text-right text-pink-600">
                     S${analysis.bull.totalCostSgd.toFixed(2)}
                   </TableCell>
                 </TableRow>
@@ -213,7 +213,7 @@ export default async function OverviewPage() {
                   <TableCell className="text-right">
                     S${analysis.base.grossProfitSgd.toFixed(2)}
                   </TableCell>
-                  <TableCell className="text-right text-emerald-600">
+                  <TableCell className="text-right text-pink-600">
                     S${analysis.bull.grossProfitSgd.toFixed(2)}
                   </TableCell>
                 </TableRow>
@@ -225,7 +225,7 @@ export default async function OverviewPage() {
                   <TableCell className="text-right">
                     {analysis.base.grossMarginPct.toFixed(1)}%
                   </TableCell>
-                  <TableCell className="text-right text-emerald-600">
+                  <TableCell className="text-right text-pink-600">
                     {analysis.bull.grossMarginPct.toFixed(1)}%
                   </TableCell>
                 </TableRow>

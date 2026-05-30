@@ -24,7 +24,7 @@ function LinkStatusBadge({ link }: { link: SecretLink }) {
   if (link.max_uses != null && link.use_count >= link.max_uses) {
     return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Used Up</Badge>
   }
-  return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Active</Badge>
+  return <Badge className="bg-pink-100 text-pink-800 hover:bg-pink-100">Active</Badge>
 }
 
 async function getLinksWithProducts() {

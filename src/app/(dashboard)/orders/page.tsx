@@ -22,7 +22,7 @@ function OrderStatusBadge({ status }: { status: string }) {
     confirmed: 'bg-blue-100 text-blue-800',
     processing: 'bg-indigo-100 text-indigo-800',
     shipped: 'bg-cyan-100 text-cyan-800',
-    delivered: 'bg-emerald-100 text-emerald-800',
+    delivered: 'bg-pink-100 text-pink-800',
     cancelled: 'bg-red-100 text-red-800',
   }
   const cls = map[status] ?? 'bg-gray-100 text-gray-800'
@@ -31,7 +31,7 @@ function OrderStatusBadge({ status }: { status: string }) {
 
 function PaymentBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    paid: 'bg-emerald-100 text-emerald-800',
+    paid: 'bg-pink-100 text-pink-800',
     unpaid: 'bg-red-100 text-red-800',
     partial: 'bg-yellow-100 text-yellow-800',
     refunded: 'bg-gray-100 text-gray-800',

@@ -347,7 +347,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
               </div>
               <div className="space-y-2">
                 <Label>Margin</Label>
-                <div className="h-9 px-3 flex items-center rounded-md border bg-muted text-sm font-medium text-emerald-600">
+                <div className="h-9 px-3 flex items-center rounded-md border bg-muted text-sm font-medium text-pink-600">
                   {marginPct(watchedPrice, watchedCost)}
                 </div>
               </div>
@@ -396,7 +396,7 @@ export function ServiceForm({ service, initialImages = [] }: Props) {
                             />
                           </td>
                           <td className="px-4 py-2">
-                            <span className="text-sm font-medium text-emerald-600">
+                            <span className="text-sm font-medium text-pink-600">
                               {marginPct(price, cost)}
                             </span>
                           </td>

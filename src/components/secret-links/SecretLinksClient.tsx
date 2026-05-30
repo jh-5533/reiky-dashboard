@@ -58,7 +58,7 @@ function CopyButton({ url }: CopyButtonProps) {
   return (
     <Button size="sm" variant="outline" onClick={handleCopy}>
       {copied ? (
-        <><Check size={12} className="mr-1 text-emerald-600" />Copied</>
+        <><Check size={12} className="mr-1 text-pink-600" />Copied</>
       ) : (
         <><Copy size={12} className="mr-1" />Copy</>
       )}
@@ -166,7 +166,7 @@ export function SecretLinksClient({ mode, url }: Props) {
             </div>
             <Button className="w-full" onClick={copyGenerated}>
               {copied ? (
-                <><Check size={14} className="mr-2 text-emerald-600" />Copied!</>
+                <><Check size={14} className="mr-2 text-pink-600" />Copied!</>
               ) : (
                 <><Copy size={14} className="mr-2" />Copy to Clipboard</>
               )}
